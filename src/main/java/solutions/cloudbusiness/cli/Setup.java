@@ -172,6 +172,18 @@ public class Setup {
         scriptPath.toFile().setExecutable(true, false);
         System.out.println("Installed wrapper script to: " + scriptPath);
 
+        // Create jcmd symlink
+        Path jcmdPath = binPath.resolve("jcmd");
+        try {
+            // Remove existing symlink if it exists
+            Files.deleteIfExists(jcmdPath);
+            // Create symlink
+            Files.createSymbolicLink(jcmdPath, Paths.get("commander"));
+            System.out.println("Created jcmd symlink to: " + jcmdPath);
+        } catch (Exception e) {
+            System.out.println("Note: Could not create jcmd symlink: " + e.getMessage());
+        }
+
         // Check if bin directory is in PATH
         String pathEnv = System.getenv("PATH");
         if (pathEnv == null || !pathEnv.contains(binPath.toString())) {
@@ -182,7 +194,7 @@ public class Setup {
             System.out.println("!".repeat(60));
         } else {
             System.out.println("✓ Bin directory is already in PATH");
-            System.out.println("\nYou can now run Commander using: commander");
+            System.out.println("\nYou can now run Commander using: commander or jcmd");
         }
     }
 
@@ -202,6 +214,15 @@ public class Setup {
 
         System.out.println("Installed wrapper script to: " + scriptPath);
 
+        // Create jcmd.bat copy
+        Path jcmdPath = binPath.resolve("jcmd.bat");
+        try {
+            Files.copy(scriptPath, jcmdPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("Created jcmd.bat copy to: " + jcmdPath);
+        } catch (Exception e) {
+            System.out.println("Note: Could not create jcmd.bat: " + e.getMessage());
+        }
+
         // Check if bin directory is in PATH
         String pathEnv = System.getenv("PATH");
         if (pathEnv == null || !pathEnv.contains(binPath.toString())) {
@@ -215,7 +236,7 @@ public class Setup {
             System.out.println("!".repeat(60));
         } else {
             System.out.println("✓ Bin directory is already in PATH");
-            System.out.println("\nYou can now run Commander using: commander");
+            System.out.println("\nYou can now run Commander using: commander or jcmd");
         }
     }
 
