@@ -5,20 +5,43 @@ A plugin-based CLI framework for Java that allows developers to create modular, 
 ## Overview
 
 I had multiple Java "test" apps spread out across project directories. I need a way to organize them and combine them 
-into a single framework. I came up with this idea. 
+into a single framework. I came up with this idea based on another project developed using Python. 
 
 I'm calling it Commander. It is a Java-based CLI framework that enables users to execute plugins through a simple 
 command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory 
 and registered for use.
 
-As I worked through the design, I decided to use Claude Code to help me get it done fast. The amount of time saved using
-AI tools like Claude is invaluable. Unless you have specific code you can copy into a new project or libraries you can 
-reuse, coding with AI is like having a robot. The more specific you can be when describing each component, the better 
+As I worked through the design, I decided to use Claude Code to help me get it done. The amount of time saved using
+AI tools like Claude is invaluable. Coding with AI is like having a robot or a development partner that can type 1000 
+characters per second. The more specific you can be when describing each component, the better 
 the resulting code will be. 
 
-The concept is also based on another project I have using Python, where a command line app can invoke REST API clients 
-that have been registered as modules in a YAML file and argparse is used to specify and parse the args for each 
-individual REST client.
+However, I will point out, I came up with the architecture, plugin system, had written some of the code already and 
+decided on which libraries to use. 
+
+You still need to understand what you're building, use AI as a powerful assistant, but not a replacement for thinking.
+
+It was an iterative process, not a single prompt to perfect code experience. It was conversational, resulting in 
+refinement, testing and iteration. Code had to be reviewed, I knew what I wanted, reviewed the code, suggested changes, 
+and drove the effort. 
+
+## Architecture Origins
+This architecture was informed by lessons learned from a Python-based multi-platform REST client framework I previously 
+built. With that project, I discovered:
+
+- **Performance degradation** as API platforms were added, the client became slower. This led to the item below.
+- The importance of **lazy loading**  or **on-demand loading** - Only load what you're executing.
+- **Simplicity beats complexity** - Frameworks can become overhead, introduce unnecessary complexity, design challenges 
+  due to the framework requirements. I reviewed several Python "cli" tools, but they seemed to add unnecessary complexity.
+  For Commander, I could have used Picocli, but it doesn't lazy load and requires changes to the bootstrap or main 
+  application. Commander is simple, small and extensible and adding new plugins has no impact on Commander speed and 
+  does not require a recompile.
+- **YAML-based plugin registries** are cleaner than code-based registration. 
+
+Commander applies these hard-won lessons from day one: lazy plugin loading, minimal framework
+complexity, and a focus on developer experience. Each plugin is isolated and only loaded when
+invoked, ensuring Commander scales to hundreds of plugins without performance impact.
+
 
 **Key Features:**
 - Self-installing fat JAR with OS-specific wrapper scripts
