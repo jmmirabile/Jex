@@ -6,18 +6,65 @@ A plugin-based CLI framework for Java that allows developers to create modular, 
 
 Commander is a Java-based CLI framework that enables users to execute plugins through a simple command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory and registered for use.
 
+**Key Features:**
+- Self-installing fat JAR with OS-specific wrapper scripts
+- YAML-based configuration for arguments and plugins
+- Dynamic plugin loading from JAR files
+- Built-in help and plugin management commands
+- Zero configuration required - just download and run setup
+
+## Quick Start
+
+### Installation
+
+1. **Download** the `commander.jar` file (fat JAR with all dependencies)
+
+2. **Run setup** to install Commander:
+   ```bash
+   java -jar commander.jar --setup
+   ```
+
+3. **Add to PATH** (if needed):
+   - **Linux/macOS**: The installer will tell you if `~/.local/bin` needs to be added to PATH
+   - **Windows**: Add `%LOCALAPPDATA%\Programs\Commander` to your PATH environment variable
+
+4. **Verify installation**:
+   ```bash
+   commander --help
+   ```
+
+### Installation Locations
+
+Commander installs to OS-specific locations:
+
+**Linux:**
+- JAR: `~/.local/lib/commander/commander.jar`
+- Script: `~/.local/bin/commander`
+- Config: `~/.config/Commander/`
+
+**macOS:**
+- JAR: `~/Library/Application Support/Commander/commander.jar`
+- Script: `~/.local/bin/commander`
+- Config: `~/Library/Application Support/Commander/`
+
+**Windows:**
+- JAR: `%LOCALAPPDATA%\Programs\Commander\commander.jar`
+- Script: `%LOCALAPPDATA%\Programs\Commander\commander.bat`
+- Config: `%APPDATA%\Commander\`
+
 ## Architecture
 
 ### Execution Flow
 
-1. User runs: `commander <plugin-name> [plugin-args...]` (via wrapper script)
-2. Commander checks if the command is a Commander built-in (e.g., `--setup`)
-3. If not a built-in, Commander treats the first argument as a plugin name
-4. Looks up the plugin in `plugin.yaml` registry
-5. Loads the plugin JAR dynamically
-6. Extracts the plugin's `arguments.yaml` from the JAR
-7. Parses remaining arguments using Apache Commons CLI
-8. Executes the plugin with parsed arguments
+1. User runs: `commander [options]` or `commander <plugin-name> [plugin-args...]`
+2. Commander loads its `arguments.yaml` and parses built-in options
+3. If a built-in command is detected (e.g., `--setup`, `--help`), execute it and exit
+4. Otherwise, treat the first argument as a plugin name
+5. Look up the plugin in `plugin.yaml` registry
+6. Load the plugin JAR dynamically *(in progress)*
+7. Extract the plugin's `arguments.yaml` from the JAR *(in progress)*
+8. Parse remaining arguments using Apache Commons CLI *(in progress)*
+9. Instantiate and execute the plugin *(in progress)*
 
 ### Configuration Directory Structure
 
@@ -110,21 +157,47 @@ options:
 
 ## Commander Built-in Commands
 
-### Setup
+### Help
 
-Initialize the Commander configuration directory:
+Display usage information and available commands:
+
+```bash
+commander --help
+commander -h
+commander        # No arguments also shows help
+```
+
+### Setup ✅ Implemented
+
+Initialize and install Commander:
 
 ```bash
 commander --setup
+java -jar commander.jar --setup  # First-time setup
 ```
 
-This creates:
-- Configuration directory (OS-specific location)
-- `plugins/` subdirectory
-- Default `plugin.yaml` registry
-- Default `arguments.yaml` for Commander
+This command:
+- Creates configuration directory (OS-specific location)
+- Creates `plugins/` subdirectory
+- Generates default `plugin.yaml` registry with helpful comments
+- Generates default `arguments.yaml` for Commander
+- **Installs** `commander.jar` to the lib directory
+- **Creates** and installs OS-specific wrapper script (`commander` or `commander.bat`)
+- **Makes** the script executable (Unix/Linux/macOS)
+- **Checks** if bin directory is in PATH and provides instructions if needed
 
-### Template Generator
+### List Plugins ✅ Implemented
+
+List all installed plugins:
+
+```bash
+commander --list
+commander -l
+```
+
+Shows all registered plugins from `plugin.yaml` or a helpful message if no plugins are installed.
+
+### Generate Plugin Template ⏳ Planned
 
 Generate a plugin template/stub for development:
 
@@ -132,50 +205,99 @@ Generate a plugin template/stub for development:
 commander --generate-plugin <plugin-name>
 ```
 
-This creates a plugin project template with:
+This will create a plugin project template with:
 - Plugin class skeleton implementing the `Plugin` interface
 - Sample `arguments.yaml`
-- Build configuration
+- Maven build configuration
 - README with development instructions
+
+*Status: Command placeholder exists, implementation pending*
 
 ## Usage
 
-### Installing a Plugin
-
-1. Copy the plugin JAR to the `plugins/` directory
-2. Register the plugin in `plugin.yaml`
-3. Run the plugin: `commander <plugin-name> [args...]`
-
-### Running a Plugin
+### Using Commander
 
 ```bash
-# Example: Run my-plugin with arguments
-commander my-plugin --input-file data.txt --output-file result.txt --verbose
+# Show help
+commander --help
+
+# List installed plugins
+commander --list
+
+# Run setup (installs Commander)
+commander --setup
 ```
 
-### Listing Available Plugins
+### Installing a Plugin ⏳ Manual Process (Automated loading pending)
 
-```bash
-# When no plugin is specified, Commander lists available plugins
-commander
-```
+1. **Copy** the plugin JAR to the plugins directory:
+   - Linux: `~/.config/Commander/plugins/`
+   - macOS: `~/Library/Application Support/Commander/plugins/`
+   - Windows: `%APPDATA%\Commander\plugins\`
+
+2. **Register** the plugin in `plugin.yaml`:
+   ```yaml
+   my-plugin:
+     jar: my-plugin.jar
+     class: com.example.MyPlugin
+     version: 1.0.0
+     description: "My custom plugin"
+   ```
+
+3. **Run** the plugin:
+   ```bash
+   commander my-plugin [args...]
+   ```
+   *Note: Automatic plugin loading is in progress*
 
 ## Developing Plugins
 
-### Plugin Development Steps
+### Plugin Development Steps ⏳ In Progress
 
-1. Generate a plugin template:
+1. **Generate a plugin template** *(planned)*:
    ```bash
    commander --generate-plugin my-plugin
    ```
 
-2. Implement the `Plugin` interface in your main class
+2. **Implement the `Plugin` interface** in your main class:
+   ```java
+   package com.example;
 
-3. Define CLI arguments in `arguments.yaml`
+   import solutions.cloudbusiness.cli.Plugin;
 
-4. Build the plugin JAR with `arguments.yaml` included as a resource
+   public class MyPlugin implements Plugin {
+       @Override
+       public String getName() {
+           return "my-plugin";
+       }
 
-5. Install the plugin:
+       @Override
+       public void execute(String[] args) {
+           // Your plugin logic here
+       }
+
+       @Override
+       public String[] getCommandLineOptions() {
+           // Return CLI options
+           return new String[0];
+       }
+   }
+   ```
+
+3. **Define CLI arguments** in `src/main/resources/arguments.yaml`:
+   ```yaml
+   options:
+     - name: input
+       short: i
+       long: input-file
+       description: "Input file path"
+       required: true
+       hasArg: true
+   ```
+
+4. **Build the plugin JAR** with `arguments.yaml` included as a resource
+
+5. **Install the plugin**:
    - Copy JAR to `~/.config/Commander/plugins/`
    - Register in `plugin.yaml`
 
@@ -189,15 +311,100 @@ my-plugin/
 │       │   └── com/example/MyPlugin.java
 │       └── resources/
 │           └── arguments.yaml
-├── pom.xml (or build.gradle)
+├── pom.xml
 └── README.md
 ```
 
+## Building Commander from Source
+
+### Prerequisites
+
+- Java 21 or later
+- Maven 3.6+
+
+### Build Steps
+
+1. **Clone the repository** (or download source)
+
+2. **Build the fat JAR**:
+   ```bash
+   mvn clean package
+   ```
+
+3. **The built JAR** will be at:
+   ```
+   target/commander.jar
+   ```
+
+4. **Install it**:
+   ```bash
+   java -jar target/commander.jar --setup
+   ```
+
+### Development Commands
+
+```bash
+# Compile only
+mvn compile
+
+# Run tests
+mvn test
+
+# Build without tests
+mvn package -DskipTests
+
+# Clean build directory
+mvn clean
+```
+
+## Project Structure
+
+```
+Commander/
+├── src/
+│   ├── main/
+│   │   ├── java/solutions/cloudbusiness/cli/
+│   │   │   ├── App.java              # Main entry point
+│   │   │   ├── Setup.java            # Setup command implementation
+│   │   │   ├── Plugin.java           # Plugin interface
+│   │   │   ├── PluginLoader.java     # Loads plugins from YAML
+│   │   │   └── ArgumentParser.java   # YAML-based argument parser
+│   │   └── resources/
+│   │       ├── commander.sh          # Unix wrapper script template
+│   │       └── commander.bat         # Windows wrapper script template
+│   └── test/
+│       └── java/solutions/cloudbusiness/cli/
+│           └── AppTest.java
+├── pom.xml                            # Maven build configuration
+└── README.md
+```
+
+## Implementation Status
+
+### ✅ Completed Features
+- Self-installing fat JAR with Maven Shade Plugin
+- OS-specific installation (Linux, macOS, Windows)
+- Wrapper script generation and installation
+- Help system (`--help`, `-h`)
+- Setup command (`--setup`)
+- List plugins command (`--list`, `-l`)
+- YAML-based argument parsing
+- Configuration directory management
+
+### ⏳ In Progress / Planned
+- Dynamic plugin JAR loading
+- Plugin argument parsing from JAR resources
+- Plugin instantiation and execution
+- Plugin template generator (`--generate-plugin`)
+- Sample plugin for testing
+- Comprehensive error handling
+
 ## Dependencies
 
-- **Apache Commons CLI**: Command-line argument parsing
-- **SnakeYAML**: YAML configuration file parsing
-- **JUnit**: Testing framework
+- **Apache Commons CLI 1.11.0**: Command-line argument parsing
+- **SnakeYAML 2.5**: YAML configuration file parsing
+- **JUnit 3.8.1**: Testing framework
+- **Maven Shade Plugin 3.5.1**: Fat JAR creation
 
 ## License
 
