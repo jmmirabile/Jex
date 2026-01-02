@@ -4,7 +4,17 @@ A plugin-based CLI framework for Java that allows developers to create modular, 
 
 ## Overview
 
-Commander is a Java-based CLI framework that enables users to execute plugins through a simple command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory and registered for use.
+I had multiple Java "test" apps spread out across project directories. I need a way to organize them and combine them 
+into a single framework. I came up with this idea. 
+
+I'm calling it Commander. It is a Java-based CLI framework that enables users to execute plugins through a simple 
+command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory 
+and registered for use.
+
+As I worked through the design, I decided to use Claude Code to help me get it done fast. The concept is also based 
+on another project I have with Python, where Python REST API clients are registered as modules and all have their own 
+arguments. The Python project uses Argparse, this project uses Java Apache Commons Cli Options, which is not as robust 
+as Python's Argparse. 
 
 **Key Features:**
 - Self-installing fat JAR with OS-specific wrapper scripts
@@ -17,13 +27,17 @@ Commander is a Java-based CLI framework that enables users to execute plugins th
 
 ### Installation
 
-1. **Download** the `commander.jar` file (fat JAR with all dependencies)
+1. **Download** the `commander.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run setup** to install Commander:
    ```bash
    java -jar commander.jar --setup
    ```
-
+   * After setup has been run, the following has been created:
+     * After setup has been run, a soft link is also created named "jcmd" so you don't have to type "commander".
+     * A default plugin is installed named "hello". It takes one parameter "-n|--name". This is created as an example.
+     * A plugins.yaml file is created in the Commander config directory. This is where the plugins are registered.
+     
 3. **Add to PATH** (if needed):
    - **Linux/macOS**: The installer will tell you if `~/.local/bin` needs to be added to PATH
    - **Windows**: Add `%LOCALAPPDATA%\Programs\Commander` to your PATH environment variable
@@ -61,10 +75,10 @@ Commander installs to OS-specific locations:
 3. If a built-in command is detected (e.g., `--setup`, `--help`), execute it and exit
 4. Otherwise, treat the first argument as a plugin name
 5. Look up the plugin in `plugin.yaml` registry
-6. Load the plugin JAR dynamically *(in progress)*
-7. Extract the plugin's `arguments.yaml` from the JAR *(in progress)*
-8. Parse remaining arguments using Apache Commons CLI *(in progress)*
-9. Instantiate and execute the plugin *(in progress)*
+6. Load the plugin JAR dynamically 
+7. Extract the plugin's `arguments.yaml` from the JAR 
+8. Parse remaining arguments using Apache Commons CLI 
+9. Instantiate and execute the plugin 
 
 ### Configuration Directory Structure
 
@@ -75,7 +89,7 @@ Commander stores its configuration in OS-specific locations:
 - **macOS**: `~/Library/Application Support/Commander`
 
 ```
-~/.config/Commander/
+<platform config directory>/Commander/
 ├── plugin.yaml           # Registry of installed plugins
 ├── arguments.yaml        # Commander's own CLI arguments
 └── plugins/
@@ -167,7 +181,7 @@ commander -h
 commander        # No arguments also shows help
 ```
 
-### Setup ✅ Implemented
+### Setup
 
 Initialize and install Commander:
 
@@ -186,7 +200,7 @@ This command:
 - **Makes** the script executable (Unix/Linux/macOS)
 - **Checks** if bin directory is in PATH and provides instructions if needed
 
-### List Plugins ✅ Implemented
+### List Plugins
 
 List all installed plugins:
 
@@ -252,7 +266,7 @@ commander --setup
 
 ## Developing Plugins
 
-### Plugin Development Steps ⏳ In Progress
+### Plugin Development Steps
 
 1. **Generate a plugin template** *(planned)*:
    ```bash
@@ -408,8 +422,8 @@ Commander/
 
 ## License
 
-TBD
+Apache 2.0 License - see LICENSE file for details.
 
 ## Contributing
 
-TBD
+Found a bug or want a feature? Please open an issue or submit a pull request!
