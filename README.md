@@ -11,10 +11,14 @@ I'm calling it Commander. It is a Java-based CLI framework that enables users to
 command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory 
 and registered for use.
 
-As I worked through the design, I decided to use Claude Code to help me get it done fast. The concept is also based 
-on another project I have with Python, where Python REST API clients are registered as modules and all have their own 
-arguments. The Python project uses Argparse, this project uses Java Apache Commons Cli Options, which is not as robust 
-as Python's Argparse. 
+As I worked through the design, I decided to use Claude Code to help me get it done fast. The amount of time saved using
+AI tools like Claude is invaluable. Unless you have specific code you can copy into a new project or libraries you can 
+reuse, coding with AI is like having a robot. The more specific you can be when describing each component, the better 
+the resulting code will be. 
+
+The concept is also based on another project I have using Python, where a command line app can invoke REST API clients 
+that have been registered as modules in a YAML file and argparse is used to specify and parse the args for each 
+individual REST client.
 
 **Key Features:**
 - Self-installing fat JAR with OS-specific wrapper scripts
