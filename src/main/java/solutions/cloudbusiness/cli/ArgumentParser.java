@@ -81,14 +81,18 @@ public class ArgumentParser {
         System.out.println("  commander [options]           - Run Commander built-in commands");
         System.out.println("  commander <plugin> [args...]  - Run a plugin");
         System.out.println("\nCommander Options:");
-
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printOptions(new java.io.PrintWriter(System.out, true), 80, options, 2, 4);
+        System.out.println("     --setup                            Initialize Commander configuration");
+        System.out.println("     --generate-plugin <plugin-name>    Generate a plugin template");
+        System.out.println("          --java-package <package>      Java package name (use with --generate-plugin)");
+        System.out.println("  -l,--list                             List all installed plugins");
+        System.out.println("  -h,--help                             Display help information");
 
         System.out.println("\nExamples:");
-        System.out.println("  commander --setup                    Initialize Commander");
-        System.out.println("  commander --list                     List installed plugins");
-        System.out.println("  commander --generate-plugin my-tool  Generate plugin template");
-        System.out.println("  commander my-plugin --help           Run a plugin");
+        System.out.println("  commander --setup                              Initialize Commander");
+        System.out.println("  commander --list                               List installed plugins");
+        System.out.println("  commander --generate-plugin my-tool            Generate plugin template");
+        System.out.println("  commander --generate-plugin my-tool \\");
+        System.out.println("            --java-package com.mycompany.tools   With custom package");
+        System.out.println("  commander my-plugin --help                     Run a plugin");
     }
 }

@@ -66,7 +66,8 @@ public class App
 
             if (cmd.hasOption("generate-plugin")) {
                 String pluginName = cmd.getOptionValue("generate-plugin");
-                generatePlugin(pluginName);
+                String javaPackage = cmd.getOptionValue("java-package");
+                generatePlugin(pluginName, javaPackage);
                 return;
             }
         }
@@ -75,19 +76,32 @@ public class App
         if (args.length > 0) {
             String pluginName = args[0];
 
-            // Load plugins
+            // Load plugin registry
             String pluginYamlPath = configDir + File.separator + "plugin.yaml";
             PluginLoader loader = new PluginLoader();
-            Map<String, List<Map<String, String>>> plugins = loader.loadPlugins(pluginYamlPath);
+            Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(pluginYamlPath);
 
             if (plugins != null && plugins.containsKey(pluginName)) {
-                // TODO: Implement plugin loading and execution
-                System.out.println("Plugin found: " + pluginName);
-                System.out.println("Plugin execution not yet implemented.");
+                // Load and execute the plugin
+                Map<String, Object> pluginConfig = plugins.get(pluginName);
+                Plugin plugin = loader.loadPlugin(pluginName, pluginConfig);
+
+                if (plugin != null) {
+                    // Pass remaining arguments to the plugin (skip the plugin name)
+                    String[] pluginArgs = new String[args.length - 1];
+                    System.arraycopy(args, 1, pluginArgs, 0, args.length - 1);
+
+                    // Execute the plugin
+                    plugin.execute(pluginArgs);
+                } else {
+                    System.err.println("Error: Failed to load plugin: " + pluginName);
+                    System.exit(1);
+                }
             } else {
                 System.err.println("Error: Unknown command or plugin: " + pluginName);
                 System.out.println("\nUse 'commander --help' for usage information.");
                 displayAvailablePlugins(plugins);
+                System.exit(1);
             }
         } else {
             // No arguments provided
@@ -100,12 +114,12 @@ public class App
         String pluginYamlPath = configDir + File.separator + "plugin.yaml";
 
         PluginLoader loader = new PluginLoader();
-        Map<String, List<Map<String, String>>> plugins = loader.loadPlugins(pluginYamlPath);
+        Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(pluginYamlPath);
 
         displayAvailablePlugins(plugins);
     }
 
-    private static void displayAvailablePlugins(Map<String, List<Map<String, String>>> plugins) {
+    private static void displayAvailablePlugins(Map<String, Map<String, Object>> plugins) {
         if (plugins == null || plugins.isEmpty()) {
             System.out.println("\nNo plugins installed.");
             System.out.println("Install plugins by:");
@@ -115,20 +129,30 @@ public class App
         }
 
         System.out.println("\nInstalled Plugins:");
-        for (String name : plugins.keySet()) {
-            System.out.println("  " + name);
+        for (Map.Entry<String, Map<String, Object>> entry : plugins.entrySet()) {
+            String name = entry.getKey();
+            Map<String, Object> config = entry.getValue();
+            String description = (String) config.get("description");
+            String version = (String) config.get("version");
+
+            if (description != null && version != null) {
+                System.out.println("  " + name + " (v" + version + ") - " + description);
+            } else if (description != null) {
+                System.out.println("  " + name + " - " + description);
+            } else {
+                System.out.println("  " + name);
+            }
         }
         System.out.println("\nUse 'commander <plugin-name> --help' to see plugin-specific options.");
     }
 
-    private static void generatePlugin(String pluginName) {
+    private static void generatePlugin(String pluginName, String javaPackage) {
         if (pluginName == null || pluginName.trim().isEmpty()) {
             System.err.println("Error: Plugin name is required.");
-            System.out.println("Usage: commander --generate-plugin <plugin-name>");
+            System.out.println("Usage: commander --generate-plugin <plugin-name> [--java-package <package>]");
             return;
         }
 
-        System.out.println("Generating plugin template: " + pluginName);
-        System.out.println("TODO: Plugin template generation not yet implemented.");
+        PluginGenerator.generate(pluginName, javaPackage);
     }
 }
