@@ -1,0 +1,17 @@
+# Hello Plugin CLI Arguments
+
+options:
+  - name: name
+    short: n
+    long: name
+    description: "Name to greet"
+    required: false
+    hasArg: true
+    argName: "name"
+
+  - name: help
+    short: h
+    long: help
+    description: "Display help information"
+    required: false
+    hasArg: false

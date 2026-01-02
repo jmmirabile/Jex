@@ -2,10 +2,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>solutions.cloudbusiness.cli</groupId>
-  <artifactId>Commander</artifactId>
+  <artifactId>Jex</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.1</version>
-  <name>Commander</name>
+  <version>1.0.0</version>
+  <name>Jex</name>
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>
@@ -53,7 +53,7 @@
                   <mainClass>solutions.cloudbusiness.cli.App</mainClass>
                 </transformer>
               </transformers>
-              <finalName>commander</finalName>
+              <finalName>jex</finalName>
             </configuration>
           </execution>
         </executions>

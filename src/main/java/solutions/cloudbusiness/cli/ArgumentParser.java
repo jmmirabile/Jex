@@ -75,24 +75,24 @@ public class ArgumentParser {
         formatter.printHelp(commandName, options);
     }
 
-    public static void printCommanderHelp(Options options) {
-        System.out.println("Commander - Plugin-based CLI Framework");
+    public static void printJexHelp(Options options) {
+        System.out.println("Jex - Plugin-based CLI Framework");
         System.out.println("\nUsage:");
-        System.out.println("  commander [options]           - Run Commander built-in commands");
-        System.out.println("  commander <plugin> [args...]  - Run a plugin");
-        System.out.println("\nCommander Options:");
-        System.out.println("     --setup                            Initialize Commander configuration");
+        System.out.println("  jex [options]           - Run Jex built-in commands");
+        System.out.println("  jex <plugin> [args...]  - Run a plugin");
+        System.out.println("\nJex Options:");
+        System.out.println("     --setup                            Initialize Jex configuration");
         System.out.println("     --generate-plugin <plugin-name>    Generate a plugin template");
         System.out.println("          --java-package <package>      Java package name (use with --generate-plugin)");
         System.out.println("  -l,--list                             List all installed plugins");
         System.out.println("  -h,--help                             Display help information");
 
         System.out.println("\nExamples:");
-        System.out.println("  commander --setup                              Initialize Commander");
-        System.out.println("  commander --list                               List installed plugins");
-        System.out.println("  commander --generate-plugin my-tool            Generate plugin template");
-        System.out.println("  commander --generate-plugin my-tool \\");
+        System.out.println("  jex --setup                              Initialize Jex");
+        System.out.println("  jex --list                               List installed plugins");
+        System.out.println("  jex --generate-plugin my-tool            Generate plugin template");
+        System.out.println("  jex --generate-plugin my-tool \\");
         System.out.println("            --java-package com.mycompany.tools   With custom package");
-        System.out.println("  commander my-plugin --help                     Run a plugin");
+        System.out.println("  jex my-plugin --help                     Run a plugin");
     }
 }

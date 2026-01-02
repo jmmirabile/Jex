@@ -13,19 +13,6 @@ import java.util.Map;
 
 public class PluginLoader {
 
-    private static String getConfigDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String appName = "Commander";
-
-        if (os.contains("win")) {
-            return System.getenv("APPDATA") + File.separator + appName;
-        } else if (os.contains("mac")) {
-            return System.getProperty("user.home") + "/Library/Application Support/" + appName;
-        } else {
-            return System.getProperty("user.home") + "/.config/" + appName;
-        }
-    }
-
     /**
      * Load plugin registry from plugin.yaml
      */
@@ -59,8 +46,7 @@ public class PluginLoader {
             }
 
             // Construct full path to JAR file
-            String pluginsDir = getConfigDirectory() + File.separator + "plugins";
-            Path jarPath = Paths.get(pluginsDir, jarFileName);
+            Path jarPath = Paths.get(PathConfig.getPluginsDirectory(), jarFileName);
 
             if (!Files.exists(jarPath)) {
                 System.err.println("Error: Plugin JAR not found: " + jarPath);

@@ -8,46 +8,38 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Commander - Plugin-based CLI Framework
+ * Jex - Plugin-based CLI Framework
  */
 public class App
 {
 
-    private static String getConfigDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String appName = "Commander";
-
-        if (os.contains("win")) {
-            return System.getenv("APPDATA") + File.separator + appName;
-        } else if (os.contains("mac")) {
-            return System.getProperty("user.home") + "/Library/Application Support/" + appName;
-        } else {
-            return System.getProperty("user.home") + "/.config/" + appName;
-        }
-    }
-
     public static void main(String[] args) {
-        String configDir = getConfigDirectory();
-        String argumentsYamlPath = configDir + File.separator + "arguments.yaml";
+        // Check for --setup FIRST (before loading arguments.yaml which may not exist yet)
+        if (args.length > 0 && args[0].equals("--setup")) {
+            Setup.run();
+            return;
+        }
 
-        // Load Commander's options from arguments.yaml
-        Options commanderOptions = ArgumentParser.loadOptionsFromYaml(argumentsYamlPath);
+        String argumentsYamlPath = PathConfig.getArgumentsYamlPath();
+
+        // Load Jex's options from arguments.yaml
+        Options jexOptions = ArgumentParser.loadOptionsFromYaml(argumentsYamlPath);
 
         // Parse command line arguments
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd = null;
 
         try {
-            // Try to parse as Commander arguments (only if args start with -)
+            // Try to parse as Jex arguments (only if args start with -)
             if (args.length > 0 && args[0].startsWith("-")) {
-                cmd = parser.parse(commanderOptions, args, false);
+                cmd = parser.parse(jexOptions, args, false);
             }
         } catch (ParseException e) {
             // If parsing fails, it might be a plugin command
             cmd = null;
         }
 
-        // Handle Commander built-in commands
+        // Handle Jex built-in commands
         if (cmd != null) {
             if (cmd.hasOption("setup")) {
                 Setup.run();
@@ -55,7 +47,7 @@ public class App
             }
 
             if (cmd.hasOption("h") || cmd.hasOption("help")) {
-                ArgumentParser.printCommanderHelp(commanderOptions);
+                ArgumentParser.printJexHelp(jexOptions);
                 return;
             }
 
@@ -77,9 +69,8 @@ public class App
             String pluginName = args[0];
 
             // Load plugin registry
-            String pluginYamlPath = configDir + File.separator + "plugin.yaml";
             PluginLoader loader = new PluginLoader();
-            Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(pluginYamlPath);
+            Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(PathConfig.getPluginYamlPath());
 
             if (plugins != null && plugins.containsKey(pluginName)) {
                 // Load and execute the plugin
@@ -99,22 +90,19 @@ public class App
                 }
             } else {
                 System.err.println("Error: Unknown command or plugin: " + pluginName);
-                System.out.println("\nUse 'commander --help' for usage information.");
+                System.out.println("\nUse 'jex --help' for usage information.");
                 displayAvailablePlugins(plugins);
                 System.exit(1);
             }
         } else {
             // No arguments provided
-            ArgumentParser.printCommanderHelp(commanderOptions);
+            ArgumentParser.printJexHelp(jexOptions);
         }
     }
 
     private static void listPlugins() {
-        String configDir = getConfigDirectory();
-        String pluginYamlPath = configDir + File.separator + "plugin.yaml";
-
         PluginLoader loader = new PluginLoader();
-        Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(pluginYamlPath);
+        Map<String, Map<String, Object>> plugins = loader.loadPluginRegistry(PathConfig.getPluginYamlPath());
 
         displayAvailablePlugins(plugins);
     }
@@ -123,8 +111,8 @@ public class App
         if (plugins == null || plugins.isEmpty()) {
             System.out.println("\nNo plugins installed.");
             System.out.println("Install plugins by:");
-            System.out.println("1. Copying plugin JAR files to: " + getConfigDirectory() + File.separator + "plugins");
-            System.out.println("2. Registering them in: " + getConfigDirectory() + File.separator + "plugin.yaml");
+            System.out.println("1. Copying plugin JAR files to: " + PathConfig.getPluginsDirectory());
+            System.out.println("2. Registering them in: " + PathConfig.getPluginYamlPath());
             return;
         }
 
@@ -143,13 +131,13 @@ public class App
                 System.out.println("  " + name);
             }
         }
-        System.out.println("\nUse 'commander <plugin-name> --help' to see plugin-specific options.");
+        System.out.println("\nUse 'jex <plugin-name> --help' to see plugin-specific options.");
     }
 
     private static void generatePlugin(String pluginName, String javaPackage) {
         if (pluginName == null || pluginName.trim().isEmpty()) {
             System.err.println("Error: Plugin name is required.");
-            System.out.println("Usage: commander --generate-plugin <plugin-name> [--java-package <package>]");
+            System.out.println("Usage: jex --generate-plugin <plugin-name> [--java-package <package>]");
             return;
         }
 

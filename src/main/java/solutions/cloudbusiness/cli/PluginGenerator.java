@@ -30,13 +30,13 @@ public class PluginGenerator {
 
         // Display header
         System.out.println();
-        System.out.println("Commander Plugin Generator");
+        System.out.println("Jex Plugin Generator");
         System.out.println("==========================");
         System.out.println();
         System.out.println("This will create a Java Maven project with:");
         System.out.println("  • Plugin class implementing the Plugin interface");
         System.out.println("  • arguments.yaml for CLI argument definitions");
-        System.out.println("  • pom.xml configured for Commander plugins");
+        System.out.println("  • pom.xml configured for Jex plugins");
         System.out.println("  • README.md with usage instructions");
         System.out.println("  • Complete project structure ready to open in your IDE");
         System.out.println();
@@ -164,7 +164,7 @@ public class PluginGenerator {
     <packaging>jar</packaging>
 
     <name>%s Plugin</name>
-    <description>A Commander plugin</description>
+    <description>A Jex plugin</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -173,10 +173,10 @@ public class PluginGenerator {
     </properties>
 
     <dependencies>
-        <!-- Commander Plugin Interface -->
+        <!-- Jex Plugin Interface -->
         <dependency>
             <groupId>solutions.cloudbusiness.cli</groupId>
-            <artifactId>Commander</artifactId>
+            <artifactId>Jex/artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -244,7 +244,7 @@ public class %sPlugin implements Plugin {
             CommandLine cmd = parser.parse(options, args);
 
             if (cmd.hasOption("h")) {
-                formatter.printHelp("commander %s", options);
+                formatter.printHelp("jex %s", options);
                 return;
             }
 
@@ -253,7 +253,7 @@ public class %sPlugin implements Plugin {
 
         } catch (ParseException e) {
             System.err.println("Error parsing arguments: " + e.getMessage());
-            formatter.printHelp("commander %s", options);
+            formatter.printHelp("jex %s", options);
             System.exit(1);
         }
     }
@@ -302,7 +302,7 @@ options:
         String content = String.format("""
 # %s Plugin
 
-A Commander plugin.
+A Jex plugin.
 
 ## Description
 
@@ -314,7 +314,7 @@ TODO: Describe what this plugin does.
 
 - Java 21 or later
 - Maven 3.6+
-- Commander installed
+- Jex installed
 
 ### Build
 
@@ -325,11 +325,11 @@ mvn clean package
 ### Install
 
 ```bash
-# Copy JAR to Commander plugins directory
-cp target/%s-plugin-1.0.0.jar ~/.config/Commander/plugins/
+# Copy JAR to Jex plugins directory
+cp target/%s-plugin-1.0.0.jar ~/.config/Jex/plugins/
 
-# Register in Commander
-# Edit ~/.config/Commander/plugin.yaml and add:
+# Register in Jex
+# Edit ~/.config/Jex/plugin.yaml and add:
 ```
 
 ```yaml
@@ -344,10 +344,10 @@ cp target/%s-plugin-1.0.0.jar ~/.config/Commander/plugins/
 
 ```bash
 # Show help
-commander %s --help
+jex %s --help
 
 # Run the plugin
-commander %s [options]
+jex %s [options]
 ```
 
 ## Development

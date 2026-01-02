@@ -1,4 +1,4 @@
-# Commander
+# Jex
 
 A plugin-based CLI framework for Java that allows developers to create modular, extensible command-line applications.
 
@@ -7,7 +7,7 @@ A plugin-based CLI framework for Java that allows developers to create modular, 
 I had multiple Java "test" apps spread out across project directories. I need a way to organize them and combine them 
 into a single framework. I came up with this idea based on another project developed using Python. 
 
-I'm calling it Commander. It is a Java-based CLI framework that enables users to execute plugins through a simple 
+I'm calling it Jex. It is a Java-based CLI framework that enables users to execute plugins through a simple 
 command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory 
 and registered for use.
 
@@ -33,14 +33,14 @@ built. With that project, I discovered:
 - The importance of **lazy loading**  or **on-demand loading** - Only load what you're executing.
 - **Simplicity beats complexity** - Frameworks can become overhead, introduce unnecessary complexity, design challenges 
   due to the framework requirements. I reviewed several Python "cli" tools, but they seemed to add unnecessary complexity.
-  For Commander, I could have used Picocli, but it doesn't lazy load and requires changes to the bootstrap or main 
-  application. Commander is simple, small and extensible and adding new plugins has no impact on Commander speed and 
+  For Jex, I could have used Picocli, but it doesn't lazy load and requires changes to the bootstrap or main 
+  application. Jex is simple, small and extensible and adding new plugins has no impact on Jex speed and 
   does not require a recompile.
 - **YAML-based plugin registries** are cleaner than code-based registration. 
 
-Commander applies these hard-won lessons from day one: lazy plugin loading, minimal framework
+Jex applies these hard-won lessons from day one: lazy plugin loading, minimal framework
 complexity, and a focus on developer experience. Each plugin is isolated and only loaded when
-invoked, ensuring Commander scales to hundreds of plugins without performance impact.
+invoked, ensuring Jex scales to hundreds of plugins without performance impact.
 
 
 **Key Features:**
@@ -54,51 +54,51 @@ invoked, ensuring Commander scales to hundreds of plugins without performance im
 
 ### Installation
 
-1. **Download** the `commander.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex.jar` file (fat JAR with all dependencies) from the Releases link.
 
-2. **Run setup** to install Commander:
+2. **Run setup** to install Jex:
    ```bash
-   java -jar commander.jar --setup
+   java -jar Jex.jar --setup
    ```
    * After setup has been run, the following has been created:
-     * After setup has been run, a soft link is also created named "jcmd" so you don't have to type "commander".
+     * After setup has been run, a soft link is also created named "jex" so you don't have to type "Jex".
      * A default plugin is installed named "hello". It takes one parameter "-n|--name". This is created as an example.
-     * A plugins.yaml file is created in the Commander config directory. This is where the plugins are registered.
+     * A plugins.yaml file is created in the Jex config directory. This is where the plugins are registered.
      
 3. **Add to PATH** (if needed):
    - **Linux/macOS**: The installer will tell you if `~/.local/bin` needs to be added to PATH
-   - **Windows**: Add `%LOCALAPPDATA%\Programs\Commander` to your PATH environment variable
+   - **Windows**: Add `%LOCALAPPDATA%\Programs\Jex` to your PATH environment variable
 
 4. **Verify installation**:
    ```bash
-   commander --help
+   Jex --help
    ```
 
 ### Installation Locations
 
-Commander installs to OS-specific locations:
+Jex installs to OS-specific locations:
 
 **Linux:**
-- JAR: `~/.local/lib/commander/commander.jar`
-- Script: `~/.local/bin/commander`
-- Config: `~/.config/Commander/`
+- JAR: `~/.local/lib/Jex/Jex.jar`
+- Script: `~/.local/bin/Jex`
+- Config: `~/.config/Jex/`
 
 **macOS:**
-- JAR: `~/Library/Application Support/Commander/commander.jar`
-- Script: `~/.local/bin/commander`
-- Config: `~/Library/Application Support/Commander/`
+- JAR: `~/Library/Application Support/Jex/Jex.jar`
+- Script: `~/.local/bin/Jex`
+- Config: `~/Library/Application Support/Jex/`
 
 **Windows:**
-- JAR: `%LOCALAPPDATA%\Programs\Commander\commander.jar`
-- Script: `%LOCALAPPDATA%\Programs\Commander\commander.bat`
-- Config: `%APPDATA%\Commander\`
+- JAR: `%LOCALAPPDATA%\Programs\Jex\Jex.jar`
+- Script: `%LOCALAPPDATA%\Programs\Jex\Jex.bat`
+- Config: `%APPDATA%\Jex\`
 
 ## Architecture
 
 ### Execution Flow
 
-1. User runs: `commander [options]` or `commander <plugin-name> [plugin-args...]`
-2. Commander loads its `arguments.yaml` and parses built-in options
+1. User runs: `Jex [options]` or `Jex <plugin-name> [plugin-args...]`
+2. Jex loads its `arguments.yaml` and parses built-in options
 3. If a built-in command is detected (e.g., `--setup`, `--help`), execute it and exit
 4. Otherwise, treat the first argument as a plugin name
 5. Look up the plugin in `plugin.yaml` registry
@@ -109,16 +109,16 @@ Commander installs to OS-specific locations:
 
 ### Configuration Directory Structure
 
-Commander stores its configuration in OS-specific locations:
+Jex stores its configuration in OS-specific locations:
 
-- **Windows**: `%APPDATA%/Commander`
-- **Linux**: `~/.config/Commander`
-- **macOS**: `~/Library/Application Support/Commander`
+- **Windows**: `%APPDATA%/Jex`
+- **Linux**: `~/.config/Jex`
+- **macOS**: `~/Library/Application Support/Jex`
 
 ```
-<platform config directory>/Commander/
+<platform config directory>/Jex/
 ├── plugin.yaml           # Registry of installed plugins
-├── arguments.yaml        # Commander's own CLI arguments
+├── arguments.yaml        # Jex's own CLI arguments
 └── plugins/
     ├── my-plugin.jar     # Self-contained plugin JAR
     ├── another-plugin.jar
@@ -196,34 +196,34 @@ options:
     hasArg: false
 ```
 
-## Commander Built-in Commands
+## Jex Built-in Commands
 
 ### Help
 
 Display usage information and available commands:
 
 ```bash
-commander --help
-commander -h
-commander        # No arguments also shows help
+Jex --help
+Jex -h
+Jex        # No arguments also shows help
 ```
 
 ### Setup
 
-Initialize and install Commander:
+Initialize and install Jex:
 
 ```bash
-commander --setup
-java -jar commander.jar --setup  # First-time setup
+Jex --setup
+java -jar Jex.jar --setup  # First-time setup
 ```
 
 This command:
 - Creates configuration directory (OS-specific location)
 - Creates `plugins/` subdirectory
 - Generates default `plugin.yaml` registry with helpful comments
-- Generates default `arguments.yaml` for Commander
-- **Installs** `commander.jar` to the lib directory
-- **Creates** and installs OS-specific wrapper script (`commander` or `commander.bat`)
+- Generates default `arguments.yaml` for Jex
+- **Installs** `Jex.jar` to the lib directory
+- **Creates** and installs OS-specific wrapper script (`Jex` or `Jex.bat`)
 - **Makes** the script executable (Unix/Linux/macOS)
 - **Checks** if bin directory is in PATH and provides instructions if needed
 
@@ -232,8 +232,8 @@ This command:
 List all installed plugins:
 
 ```bash
-commander --list
-commander -l
+Jex --list
+Jex -l
 ```
 
 Shows all registered plugins from `plugin.yaml` or a helpful message if no plugins are installed.
@@ -243,7 +243,7 @@ Shows all registered plugins from `plugin.yaml` or a helpful message if no plugi
 Generate a plugin template/stub for development:
 
 ```bash
-commander --generate-plugin <plugin-name>
+Jex --generate-plugin <plugin-name>
 ```
 
 This will create a plugin project template with:
@@ -256,25 +256,25 @@ This will create a plugin project template with:
 
 ## Usage
 
-### Using Commander
+### Using Jex
 
 ```bash
 # Show help
-commander --help
+Jex --help
 
 # List installed plugins
-commander --list
+Jex --list
 
-# Run setup (installs Commander)
-commander --setup
+# Run setup (installs Jex)
+Jex --setup
 ```
 
 ### Installing a Plugin ⏳ Manual Process (Automated loading pending)
 
 1. **Copy** the plugin JAR to the plugins directory:
-   - Linux: `~/.config/Commander/plugins/`
-   - macOS: `~/Library/Application Support/Commander/plugins/`
-   - Windows: `%APPDATA%\Commander\plugins\`
+   - Linux: `~/.config/Jex/plugins/`
+   - macOS: `~/Library/Application Support/Jex/plugins/`
+   - Windows: `%APPDATA%\Jex\plugins\`
 
 2. **Register** the plugin in `plugin.yaml`:
    ```yaml
@@ -287,7 +287,7 @@ commander --setup
 
 3. **Run** the plugin:
    ```bash
-   commander my-plugin [args...]
+   Jex my-plugin [args...]
    ```
    *Note: Automatic plugin loading is in progress*
 
@@ -297,7 +297,7 @@ commander --setup
 
 1. **Generate a plugin template** *(planned)*:
    ```bash
-   commander --generate-plugin my-plugin
+   Jex --generate-plugin my-plugin
    ```
 
 2. **Implement the `Plugin` interface** in your main class:
@@ -339,7 +339,7 @@ commander --setup
 4. **Build the plugin JAR** with `arguments.yaml` included as a resource
 
 5. **Install the plugin**:
-   - Copy JAR to `~/.config/Commander/plugins/`
+   - Copy JAR to `~/.config/Jex/plugins/`
    - Register in `plugin.yaml`
 
 ### Plugin Template Structure
@@ -356,7 +356,7 @@ my-plugin/
 └── README.md
 ```
 
-## Building Commander from Source
+## Building Jex from Source
 
 ### Prerequisites
 
@@ -374,12 +374,12 @@ my-plugin/
 
 3. **The built JAR** will be at:
    ```
-   target/commander.jar
+   target/Jex.jar
    ```
 
 4. **Install it**:
    ```bash
-   java -jar target/commander.jar --setup
+   java -jar target/Jex.jar --setup
    ```
 
 ### Development Commands
@@ -401,7 +401,7 @@ mvn clean
 ## Project Structure
 
 ```
-Commander/
+Jex/
 ├── src/
 │   ├── main/
 │   │   ├── java/solutions/cloudbusiness/cli/
@@ -411,8 +411,8 @@ Commander/
 │   │   │   ├── PluginLoader.java     # Loads plugins from YAML
 │   │   │   └── ArgumentParser.java   # YAML-based argument parser
 │   │   └── resources/
-│   │       ├── commander.sh          # Unix wrapper script template
-│   │       └── commander.bat         # Windows wrapper script template
+│   │       ├── Jex.sh          # Unix wrapper script template
+│   │       └── Jex.bat         # Windows wrapper script template
 │   └── test/
 │       └── java/solutions/cloudbusiness/cli/
 │           └── AppTest.java

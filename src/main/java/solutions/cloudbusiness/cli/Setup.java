@@ -9,41 +9,6 @@ import java.nio.file.StandardCopyOption;
 
 public class Setup {
 
-    private static String getConfigDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-        String appName = "Commander";
-
-        if (os.contains("win")) {
-            return System.getenv("APPDATA") + File.separator + appName;
-        } else if (os.contains("mac")) {
-            return System.getProperty("user.home") + "/Library/Application Support/" + appName;
-        } else {
-            return System.getProperty("user.home") + "/.config/" + appName;
-        }
-    }
-
-    private static String getLibDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if (os.contains("win")) {
-            return System.getenv("LOCALAPPDATA") + File.separator + "Programs" + File.separator + "Commander";
-        } else if (os.contains("mac")) {
-            return System.getProperty("user.home") + "/Library/Application Support/Commander";
-        } else {
-            return System.getProperty("user.home") + "/.local/lib/commander";
-        }
-    }
-
-    private static String getBinDirectory() {
-        String os = System.getProperty("os.name").toLowerCase();
-
-        if (os.contains("win")) {
-            return getLibDirectory(); // On Windows, keep in same directory
-        } else {
-            return System.getProperty("user.home") + "/.local/bin";
-        }
-    }
-
     private static String getJarPath() {
         try {
             return new File(Setup.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
@@ -54,11 +19,10 @@ public class Setup {
     }
 
     public static void run() {
-        String configDir = getConfigDirectory();
-        Path configPath = Paths.get(configDir);
-        Path pluginsPath = Paths.get(configDir, "plugins");
-        Path pluginYamlPath = Paths.get(configDir, "plugin.yaml");
-        Path argumentsYamlPath = Paths.get(configDir, "arguments.yaml");
+        Path configPath = Paths.get(PathConfig.getConfigDirectory());
+        Path pluginsPath = Paths.get(PathConfig.getPluginsDirectory());
+        Path pluginYamlPath = Paths.get(PathConfig.getPluginYamlPath());
+        Path argumentsYamlPath = Paths.get(PathConfig.getArgumentsYamlPath());
 
         try {
             // Create configuration directory
@@ -85,7 +49,7 @@ public class Setup {
                 System.out.println("plugin.yaml already exists: " + pluginYamlPath);
             }
 
-            // Create default arguments.yaml for Commander
+            // Create default arguments.yaml for Jex
             if (!Files.exists(argumentsYamlPath)) {
                 createDefaultArgumentsYaml(argumentsYamlPath.toString());
                 System.out.println("Created default arguments.yaml: " + argumentsYamlPath);
@@ -93,17 +57,17 @@ public class Setup {
                 System.out.println("arguments.yaml already exists: " + argumentsYamlPath);
             }
 
-            // Install Commander JAR
-            installCommanderJar();
+            // Install Jex JAR
+            installJexJar();
 
             // Install wrapper script
             installWrapperScript();
 
             System.out.println("\n" + "=".repeat(60));
-            System.out.println("Commander setup completed successfully!");
+            System.out.println("Jex setup completed successfully!");
             System.out.println("=".repeat(60));
             System.out.println("\nConfiguration directory: " + configPath);
-            System.out.println("Installation directory: " + getLibDirectory());
+            System.out.println("Installation directory: " + PathConfig.getLibDirectory());
             System.out.println("\nYou can now install plugins by:");
             System.out.println("1. Copying plugin JAR files to: " + pluginsPath);
             System.out.println("2. Registering them in: " + pluginYamlPath);
@@ -114,16 +78,16 @@ public class Setup {
         }
     }
 
-    private static void installCommanderJar() throws IOException {
+    private static void installJexJar() throws IOException {
         String jarPath = getJarPath();
         if (jarPath == null) {
             System.err.println("Warning: Could not locate JAR file. Skipping JAR installation.");
             return;
         }
 
-        String libDir = getLibDirectory();
+        String libDir = PathConfig.getLibDirectory();
         Path libPath = Paths.get(libDir);
-        Path targetJar = Paths.get(libDir, "commander.jar");
+        Path targetJar = Paths.get(libDir, "jex.jar");
 
         // Create lib directory if it doesn't exist
         if (!Files.exists(libPath)) {
@@ -133,13 +97,11 @@ public class Setup {
 
         // Copy JAR to lib directory
         Files.copy(Paths.get(jarPath), targetJar, StandardCopyOption.REPLACE_EXISTING);
-        System.out.println("Installed Commander JAR to: " + targetJar);
+        System.out.println("Installed Jex JAR to: " + targetJar);
     }
 
     private static void installWrapperScript() throws IOException {
-        String os = System.getProperty("os.name").toLowerCase();
-        String binDir = getBinDirectory();
-        Path binPath = Paths.get(binDir);
+        Path binPath = Paths.get(PathConfig.getBinDirectory());
 
         // Create bin directory if it doesn't exist
         if (!Files.exists(binPath)) {
@@ -147,7 +109,7 @@ public class Setup {
             System.out.println("Created bin directory: " + binPath);
         }
 
-        if (os.contains("win")) {
+        if (PathConfig.isWindows()) {
             installWindowsScript(binPath);
         } else {
             installUnixScript(binPath);
@@ -155,10 +117,10 @@ public class Setup {
     }
 
     private static void installUnixScript(Path binPath) throws IOException {
-        Path scriptPath = binPath.resolve("commander");
+        Path scriptPath = binPath.resolve("jex");
 
         // Read the script template from resources
-        try (InputStream is = Setup.class.getResourceAsStream("/commander.sh");
+        try (InputStream is = Setup.class.getResourceAsStream("/jex.sh");
              BufferedReader reader = new BufferedReader(new InputStreamReader(is));
              FileWriter writer = new FileWriter(scriptPath.toFile())) {
 
@@ -172,18 +134,6 @@ public class Setup {
         scriptPath.toFile().setExecutable(true, false);
         System.out.println("Installed wrapper script to: " + scriptPath);
 
-        // Create jcmd symlink
-        Path jcmdPath = binPath.resolve("jcmd");
-        try {
-            // Remove existing symlink if it exists
-            Files.deleteIfExists(jcmdPath);
-            // Create symlink
-            Files.createSymbolicLink(jcmdPath, Paths.get("commander"));
-            System.out.println("Created jcmd symlink to: " + jcmdPath);
-        } catch (Exception e) {
-            System.out.println("Note: Could not create jcmd symlink: " + e.getMessage());
-        }
-
         // Check if bin directory is in PATH
         String pathEnv = System.getenv("PATH");
         if (pathEnv == null || !pathEnv.contains(binPath.toString())) {
@@ -194,15 +144,15 @@ public class Setup {
             System.out.println("!".repeat(60));
         } else {
             System.out.println("✓ Bin directory is already in PATH");
-            System.out.println("\nYou can now run Commander using: commander or jcmd");
+            System.out.println("\nYou can now run Jex using: jex");
         }
     }
 
     private static void installWindowsScript(Path binPath) throws IOException {
-        Path scriptPath = binPath.resolve("commander.bat");
+        Path scriptPath = binPath.resolve("jex.bat");
 
         // Read the script template from resources
-        try (InputStream is = Setup.class.getResourceAsStream("/commander.bat");
+        try (InputStream is = Setup.class.getResourceAsStream("/jex.bat");
              BufferedReader reader = new BufferedReader(new InputStreamReader(is));
              FileWriter writer = new FileWriter(scriptPath.toFile())) {
 
@@ -213,15 +163,6 @@ public class Setup {
         }
 
         System.out.println("Installed wrapper script to: " + scriptPath);
-
-        // Create jcmd.bat copy
-        Path jcmdPath = binPath.resolve("jcmd.bat");
-        try {
-            Files.copy(scriptPath, jcmdPath, StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("Created jcmd.bat copy to: " + jcmdPath);
-        } catch (Exception e) {
-            System.out.println("Note: Could not create jcmd.bat: " + e.getMessage());
-        }
 
         // Check if bin directory is in PATH
         String pathEnv = System.getenv("PATH");
@@ -236,12 +177,12 @@ public class Setup {
             System.out.println("!".repeat(60));
         } else {
             System.out.println("✓ Bin directory is already in PATH");
-            System.out.println("\nYou can now run Commander using: commander or jcmd");
+            System.out.println("\nYou can now run Jex using: jex");
         }
     }
 
     private static void createDefaultPluginYaml(String path) throws IOException {
-        String defaultContent = "# Commander Plugin Registry\n" +
+        String defaultContent = "# Jex Plugin Registry\n" +
                 "# Add your plugins here in the following format:\n" +
                 "#\n" +
                 "# plugin-name:\n" +
@@ -263,13 +204,13 @@ public class Setup {
     }
 
     private static void createDefaultArgumentsYaml(String path) throws IOException {
-        String defaultContent = "# Commander CLI Arguments\n" +
-                "# This file defines Commander's built-in command-line arguments\n" +
+        String defaultContent = "# Jex CLI Arguments\n" +
+                "# This file defines Jex's built-in command-line arguments\n" +
                 "\n" +
                 "options:\n" +
                 "  - name: setup\n" +
                 "    long: setup\n" +
-                "    description: \"Initialize Commander configuration directory\"\n" +
+                "    description: \"Initialize Jex configuration directory\"\n" +
                 "    required: false\n" +
                 "    hasArg: false\n" +
                 "\n" +
