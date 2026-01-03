@@ -14,10 +14,19 @@ public class App
 {
 
     public static void main(String[] args) {
-        // Check for --setup FIRST (before loading arguments.yaml which may not exist yet)
-        if (args.length > 0 && args[0].equals("--setup")) {
-            Setup.run();
-            return;
+        // Check for --setup, -h, --help FIRST (before loading arguments.yaml which may not exist yet)
+        if (args.length > 0) {
+            String firstArg = args[0];
+
+            if (firstArg.equals("--setup")) {
+                Setup.run();
+                return;
+            }
+
+            if (firstArg.equals("-h") || firstArg.equals("--help")) {
+                ArgumentParser.printJexHelp(null);
+                return;
+            }
         }
 
         String argumentsYamlPath = PathConfig.getArgumentsYamlPath();
