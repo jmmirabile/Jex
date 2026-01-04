@@ -14,12 +14,12 @@ public class App
 {
 
     public static void main(String[] args) {
-        // Check for --setup, -h, --help FIRST (before loading arguments.yaml which may not exist yet)
+        // Check for --install, -h, --help FIRST (before loading arguments.yaml which may not exist yet)
         if (args.length > 0) {
             String firstArg = args[0];
 
-            if (firstArg.equals("--setup")) {
-                Setup.run();
+            if (firstArg.equals("--install")) {
+                Install.run();
                 return;
             }
 
@@ -50,8 +50,8 @@ public class App
 
         // Handle Jex built-in commands
         if (cmd != null) {
-            if (cmd.hasOption("setup")) {
-                Setup.run();
+            if (cmd.hasOption("install")) {
+                Install.run();
                 return;
             }
 
@@ -62,13 +62,6 @@ public class App
 
             if (cmd.hasOption("l") || cmd.hasOption("list")) {
                 listPlugins();
-                return;
-            }
-
-            if (cmd.hasOption("generate-plugin")) {
-                String pluginName = cmd.getOptionValue("generate-plugin");
-                String javaPackage = cmd.getOptionValue("java-package");
-                generatePlugin(pluginName, javaPackage);
                 return;
             }
         }
@@ -141,15 +134,5 @@ public class App
             }
         }
         System.out.println("\nUse 'jex <plugin-name> --help' to see plugin-specific options.");
-    }
-
-    private static void generatePlugin(String pluginName, String javaPackage) {
-        if (pluginName == null || pluginName.trim().isEmpty()) {
-            System.err.println("Error: Plugin name is required.");
-            System.out.println("Usage: jex --generate-plugin <plugin-name> [--java-package <package>]");
-            return;
-        }
-
-        PluginGenerator.generate(pluginName, javaPackage);
     }
 }

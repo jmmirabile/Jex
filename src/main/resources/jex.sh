@@ -13,7 +13,7 @@ fi
 # Check if JAR exists
 if [ ! -f "$JEX_JAR" ]; then
     echo "Error: Jex JAR not found at $JEX_JAR"
-    echo "Please run 'java -jar jex.jar --setup' to install Jex."
+    echo "Please run 'java -jar jex.jar --install' to install Jex."
     exit 1
 fi
 

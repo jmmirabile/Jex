@@ -1,4 +1,7 @@
-package solutions.cloudbusiness.cli;
+package solutions.cloudbusiness.cli.plugins;
+
+import solutions.cloudbusiness.cli.Plugin;
+import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
 import java.io.FileWriter;
@@ -8,9 +11,72 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class PluginGenerator {
+public class NewPlugin implements Plugin {
 
-    public static void generate(String pluginName, String javaPackage) {
+    @Override
+    public String getName() {
+        return "new-plugin";
+    }
+
+    @Override
+    public void execute(String[] args) {
+        // Create options
+        Options options = new Options();
+        options.addOption("h", "help", false, "Display help information");
+        options.addOption(Option.builder("p")
+                .longOpt("package")
+                .hasArg()
+                .argName("package")
+                .desc("Java package name for the plugin")
+                .build());
+
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+
+        try {
+            CommandLine cmd = parser.parse(options, args);
+
+            if (cmd.hasOption("h")) {
+                printHelp(formatter, options);
+                return;
+            }
+
+            // Get plugin name from remaining arguments
+            String[] remainingArgs = cmd.getArgs();
+            if (remainingArgs.length == 0) {
+                System.err.println("Error: Plugin name is required");
+                printHelp(formatter, options);
+                System.exit(1);
+            }
+
+            String pluginName = remainingArgs[0];
+            String javaPackage = cmd.getOptionValue("package");
+
+            // Generate the plugin
+            generate(pluginName, javaPackage);
+
+        } catch (ParseException e) {
+            System.err.println("Error parsing arguments: " + e.getMessage());
+            printHelp(formatter, options);
+            System.exit(1);
+        }
+    }
+
+    @Override
+    public String[] getCommandLineOptions() {
+        return new String[]{"--help", "-h", "--package", "-p"};
+    }
+
+    private void printHelp(HelpFormatter formatter, Options options) {
+        System.out.println("\nJex Plugin Generator");
+        System.out.println("Creates a new Jex plugin project with Maven structure\n");
+        formatter.printHelp("jex new-plugin <plugin-name> [options]", "\nOptions:", options, "");
+        System.out.println("\nExample:");
+        System.out.println("  jex new-plugin my-tool");
+        System.out.println("  jex new-plugin my-tool --package com.mycompany.tools");
+    }
+
+    private void generate(String pluginName, String javaPackage) {
         if (pluginName == null || pluginName.trim().isEmpty()) {
             System.err.println("Error: Plugin name cannot be empty");
             return;
@@ -93,7 +159,7 @@ public class PluginGenerator {
         }
     }
 
-    private static String promptForDirectory() {
+    private String promptForDirectory() {
         String currentDir = System.getProperty("user.dir");
 
         System.out.println("Where would you like to create the project?");
@@ -137,7 +203,7 @@ public class PluginGenerator {
         }
     }
 
-    private static void createProjectStructure(Path projectPath, String packageName) throws IOException {
+    private void createProjectStructure(Path projectPath, String packageName) throws IOException {
         String packagePath = packageName.replace(".", "/");
 
         // Create directories
@@ -148,7 +214,7 @@ public class PluginGenerator {
         System.out.println("✓ Created project structure");
     }
 
-    private static void generatePomXml(Path projectPath, String pluginName) throws IOException {
+    private void generatePomXml(Path projectPath, String pluginName) throws IOException {
         String artifactId = pluginName + "-plugin";
         String content = String.format("""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -176,8 +242,8 @@ public class PluginGenerator {
         <!-- Jex Plugin Interface -->
         <dependency>
             <groupId>solutions.cloudbusiness.cli</groupId>
-            <artifactId>Jex/artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>Jex</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -215,7 +281,7 @@ public class PluginGenerator {
         System.out.println("✓ Generated pom.xml");
     }
 
-    private static void generatePluginClass(Path projectPath, String packageName, String className, String pluginName) throws IOException {
+    private void generatePluginClass(Path projectPath, String packageName, String className, String pluginName) throws IOException {
         String packagePath = packageName.replace(".", "/");
         String content = String.format("""
 package %s;
@@ -271,7 +337,7 @@ public class %sPlugin implements Plugin {
         System.out.println("✓ Generated " + className + "Plugin.java");
     }
 
-    private static void generateArgumentsYaml(Path projectPath, String pluginName) throws IOException {
+    private void generateArgumentsYaml(Path projectPath, String pluginName) throws IOException {
         String content = String.format("""
 # %s Plugin CLI Arguments
 
@@ -298,7 +364,7 @@ options:
         System.out.println("✓ Generated arguments.yaml");
     }
 
-    private static void generateReadme(Path projectPath, String pluginName, String className, String packageName) throws IOException {
+    private void generateReadme(Path projectPath, String pluginName, String className, String packageName) throws IOException {
         String content = String.format("""
 # %s Plugin
 
@@ -326,7 +392,7 @@ mvn clean package
 
 ```bash
 # Copy JAR to Jex plugins directory
-cp target/%s-plugin-1.0.0.jar ~/.config/Jex/plugins/
+cp target/%s-plugin.jar ~/.config/Jex/plugins/
 
 # Register in Jex
 # Edit ~/.config/Jex/plugin.yaml and add:
@@ -334,7 +400,7 @@ cp target/%s-plugin-1.0.0.jar ~/.config/Jex/plugins/
 
 ```yaml
 %s:
-  jar: %s-plugin-1.0.0.jar
+  jar: %s-plugin.jar
   class: %s.%sPlugin
   version: 1.0.0
   description: "TODO: Add description"
@@ -383,7 +449,7 @@ TODO: Add license information
         System.out.println("✓ Generated README.md");
     }
 
-    private static void generateGitignore(Path projectPath) throws IOException {
+    private void generateGitignore(Path projectPath) throws IOException {
         String content = """
 # Maven
 target/
@@ -419,13 +485,13 @@ dependency-reduced-pom.xml
         System.out.println("✓ Generated .gitignore");
     }
 
-    private static void writeFile(Path filePath, String content) throws IOException {
+    private void writeFile(Path filePath, String content) throws IOException {
         try (FileWriter writer = new FileWriter(filePath.toFile())) {
             writer.write(content);
         }
     }
 
-    private static String toCamelCase(String input) {
+    private String toCamelCase(String input) {
         StringBuilder result = new StringBuilder();
         boolean capitalizeNext = true;
 
@@ -443,7 +509,7 @@ dependency-reduced-pom.xml
         return result.toString();
     }
 
-    private static String capitalize(String input) {
+    private String capitalize(String input) {
         if (input == null || input.isEmpty()) {
             return input;
         }

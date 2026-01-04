@@ -4,7 +4,7 @@
   <groupId>solutions.cloudbusiness.cli</groupId>
   <artifactId>Jex</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>Jex</name>
   <url>http://maven.apache.org</url>
   <dependencies>
@@ -27,6 +27,7 @@
       </dependency>
   </dependencies>
   <build>
+    <finalName>Jex-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -53,7 +54,6 @@
                   <mainClass>solutions.cloudbusiness.cli.App</mainClass>
                 </transformer>
               </transformers>
-              <finalName>jex</finalName>
             </configuration>
           </execution>
         </executions>

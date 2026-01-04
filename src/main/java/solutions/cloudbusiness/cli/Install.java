@@ -7,11 +7,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
-public class Setup {
+public class Install {
 
     private static String getJarPath() {
         try {
-            return new File(Setup.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+            return new File(Install.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
         } catch (URISyntaxException e) {
             System.err.println("Error locating JAR file: " + e.getMessage());
             return null;
@@ -63,8 +63,11 @@ public class Setup {
             // Install wrapper script
             installWrapperScript();
 
+            // Install bundled plugins
+            installBundledPlugins(pluginsPath);
+
             System.out.println("\n" + "=".repeat(60));
-            System.out.println("Jex setup completed successfully!");
+            System.out.println("Jex installation completed successfully!");
             System.out.println("=".repeat(60));
             System.out.println("\nConfiguration directory: " + configPath);
             System.out.println("Installation directory: " + PathConfig.getLibDirectory());
@@ -73,7 +76,7 @@ public class Setup {
             System.out.println("2. Registering them in: " + pluginYamlPath);
 
         } catch (IOException e) {
-            System.err.println("Error during setup: " + e.getMessage());
+            System.err.println("Error during installation: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -120,7 +123,7 @@ public class Setup {
         Path scriptPath = binPath.resolve("jex");
 
         // Read the script template from resources
-        try (InputStream is = Setup.class.getResourceAsStream("/jex.sh");
+        try (InputStream is = Install.class.getResourceAsStream("/jex.sh");
              BufferedReader reader = new BufferedReader(new InputStreamReader(is));
              FileWriter writer = new FileWriter(scriptPath.toFile())) {
 
@@ -148,11 +151,24 @@ public class Setup {
         }
     }
 
+    private static void installBundledPlugins(Path pluginsPath) throws IOException {
+        // Install new-plugin from resources
+        InputStream pluginStream = Install.class.getResourceAsStream("/plugins/new-plugin.jar");
+        if (pluginStream != null) {
+            Path targetPlugin = pluginsPath.resolve("new-plugin.jar");
+            Files.copy(pluginStream, targetPlugin, StandardCopyOption.REPLACE_EXISTING);
+            pluginStream.close();
+            System.out.println("Installed bundled plugin: new-plugin.jar");
+        } else {
+            System.out.println("Note: new-plugin.jar not found in resources (will be available after full rebuild)");
+        }
+    }
+
     private static void installWindowsScript(Path binPath) throws IOException {
         Path scriptPath = binPath.resolve("jex.bat");
 
         // Read the script template from resources
-        try (InputStream is = Setup.class.getResourceAsStream("/jex.bat");
+        try (InputStream is = Install.class.getResourceAsStream("/jex.bat");
              BufferedReader reader = new BufferedReader(new InputStreamReader(is));
              FileWriter writer = new FileWriter(scriptPath.toFile())) {
 
@@ -183,20 +199,21 @@ public class Setup {
 
     private static void createDefaultPluginYaml(String path) throws IOException {
         String defaultContent = "# Jex Plugin Registry\n" +
-                "# Add your plugins here in the following format:\n" +
+                "# Bundled plugins (installed with Jex):\n" +
+                "\n" +
+                "new-plugin:\n" +
+                "  jar: new-plugin.jar\n" +
+                "  class: solutions.cloudbusiness.cli.plugins.NewPlugin\n" +
+                "  version: 1.0.0\n" +
+                "  description: \"Create new Jex plugin projects\"\n" +
+                "\n" +
+                "# Add your custom plugins below in the following format:\n" +
                 "#\n" +
                 "# plugin-name:\n" +
                 "#   jar: plugin-file.jar\n" +
                 "#   class: com.example.PluginClassName\n" +
                 "#   version: 1.0.0\n" +
-                "#   description: \"Plugin description\"\n" +
-                "\n" +
-                "# Example plugin (commented out):\n" +
-                "# example-plugin:\n" +
-                "#   jar: example-plugin.jar\n" +
-                "#   class: com.example.ExamplePlugin\n" +
-                "#   version: 1.0.0\n" +
-                "#   description: \"An example plugin\"\n";
+                "#   description: \"Plugin description\"\n";
 
         try (FileWriter writer = new FileWriter(path)) {
             writer.write(defaultContent);
@@ -208,18 +225,11 @@ public class Setup {
                 "# This file defines Jex's built-in command-line arguments\n" +
                 "\n" +
                 "options:\n" +
-                "  - name: setup\n" +
-                "    long: setup\n" +
-                "    description: \"Initialize Jex configuration directory\"\n" +
+                "  - name: install\n" +
+                "    long: install\n" +
+                "    description: \"Install Jex (create directories, install JAR, wrapper scripts)\"\n" +
                 "    required: false\n" +
                 "    hasArg: false\n" +
-                "\n" +
-                "  - name: generate-plugin\n" +
-                "    long: generate-plugin\n" +
-                "    description: \"Generate a plugin template\"\n" +
-                "    required: false\n" +
-                "    hasArg: true\n" +
-                "    argName: \"plugin-name\"\n" +
                 "\n" +
                 "  - name: list\n" +
                 "    short: l\n" +

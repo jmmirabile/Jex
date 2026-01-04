@@ -80,19 +80,16 @@ public class ArgumentParser {
         System.out.println("\nUsage:");
         System.out.println("  jex [options]           - Run Jex built-in commands");
         System.out.println("  jex <plugin> [args...]  - Run a plugin");
-        System.out.println("\nJex Options:");
-        System.out.println("     --setup                            Initialize Jex configuration");
-        System.out.println("     --generate-plugin <plugin-name>    Generate a plugin template");
-        System.out.println("          --java-package <package>      Java package name (use with --generate-plugin)");
-        System.out.println("  -l,--list                             List all installed plugins");
-        System.out.println("  -h,--help                             Display help information");
+        System.out.println("\nBuilt-in Commands:");
+        System.out.println("     --install             Install Jex (create directories, install JAR, wrapper scripts)");
+        System.out.println("  -l,--list                List all installed plugins");
+        System.out.println("  -h,--help                Display help information");
 
         System.out.println("\nExamples:");
-        System.out.println("  jex --setup                              Initialize Jex");
-        System.out.println("  jex --list                               List installed plugins");
-        System.out.println("  jex --generate-plugin my-tool            Generate plugin template");
-        System.out.println("  jex --generate-plugin my-tool \\");
-        System.out.println("            --java-package com.mycompany.tools   With custom package");
-        System.out.println("  jex my-plugin --help                     Run a plugin");
+        System.out.println("  jex --install                              Install Jex");
+        System.out.println("  jex --list                                 List installed plugins");
+        System.out.println("  jex new-plugin my-tool                     Create a new plugin project");
+        System.out.println("  jex new-plugin my-tool --package com.example   With custom package");
+        System.out.println("  jex <plugin-name> --help                   Show plugin help");
     }
 }

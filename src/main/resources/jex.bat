@@ -7,7 +7,7 @@ set JEX_JAR=%LOCALAPPDATA%\Programs\Jex\jex.jar
 REM Check if JAR exists
 if not exist "%JEX_JAR%" (
     echo Error: Jex JAR not found at %JEX_JAR%
-    echo Please run 'java -jar jex.jar --setup' to install Jex.
+    echo Please run 'java -jar jex.jar --install' to install Jex.
     exit /b 1
 )
 

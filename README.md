@@ -54,24 +54,26 @@ invoked, ensuring Jex scales to hundreds of plugins without performance impact.
 
 ### Installation
 
-1. **Download** the `Jex.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-1.0.1.jar` file (fat JAR with all dependencies) from the Releases link.
 
-2. **Run setup** to install Jex:
+2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex.jar --setup
+   java -jar Jex-1.0.1.jar --install
    ```
-   * After setup has been run, the following has been created:
-     * After setup has been run, a soft link is also created named "jex" so you don't have to type "Jex".
-     * A default plugin is installed named "hello". It takes one parameter "-n|--name". This is created as an example.
-     * A plugins.yaml file is created in the Jex config directory. This is where the plugins are registered.
-     
+   After installation completes, the following has been created:
+   * Configuration directories (OS-specific locations)
+   * Wrapper script (`jex` on Unix/Linux/macOS, `jex.bat` on Windows)
+   * Bundled `new-plugin` for creating new plugin projects
+   * Default `plugin.yaml` registry file
+
 3. **Add to PATH** (if needed):
    - **Linux/macOS**: The installer will tell you if `~/.local/bin` needs to be added to PATH
    - **Windows**: Add `%LOCALAPPDATA%\Programs\Jex` to your PATH environment variable
 
 4. **Verify installation**:
    ```bash
-   Jex --help
+   jex --help
+   jex --list    # Shows bundled plugins
    ```
 
 ### Installation Locations
@@ -79,33 +81,43 @@ invoked, ensuring Jex scales to hundreds of plugins without performance impact.
 Jex installs to OS-specific locations:
 
 **Linux:**
-- JAR: `~/.local/lib/Jex/Jex.jar`
-- Script: `~/.local/bin/Jex`
+- JAR: `~/.local/lib/jex/jex.jar`
+- Script: `~/.local/bin/jex`
 - Config: `~/.config/Jex/`
+- Plugins: `~/.config/Jex/plugins/`
 
 **macOS:**
-- JAR: `~/Library/Application Support/Jex/Jex.jar`
-- Script: `~/.local/bin/Jex`
+- JAR: `~/Library/Application Support/Jex/jex.jar`
+- Script: `~/.local/bin/jex`
 - Config: `~/Library/Application Support/Jex/`
+- Plugins: `~/Library/Application Support/Jex/plugins/`
 
 **Windows:**
-- JAR: `%LOCALAPPDATA%\Programs\Jex\Jex.jar`
-- Script: `%LOCALAPPDATA%\Programs\Jex\Jex.bat`
+- JAR: `%LOCALAPPDATA%\Programs\Jex\jex.jar`
+- Script: `%LOCALAPPDATA%\Programs\Jex\jex.bat`
 - Config: `%APPDATA%\Jex\`
+- Plugins: `%APPDATA%\Jex\plugins\`
 
 ## Architecture
 
+### Minimal Core Design
+
+Jex follows a **minimal core + plugin architecture**. The core has only 3 built-in commands:
+- `--install`: Bootstrap Jex installation (create directories, install JAR, wrapper scripts)
+- `--list` / `-l`: List installed plugins
+- `--help` / `-h`: Display help information
+
+**Everything else is a plugin**, including the plugin generator. This design keeps the core small, fast, and focused while enabling unlimited extensibility through plugins.
+
 ### Execution Flow
 
-1. User runs: `Jex [options]` or `Jex <plugin-name> [plugin-args...]`
-2. Jex loads its `arguments.yaml` and parses built-in options
-3. If a built-in command is detected (e.g., `--setup`, `--help`), execute it and exit
-4. Otherwise, treat the first argument as a plugin name
-5. Look up the plugin in `plugin.yaml` registry
-6. Load the plugin JAR dynamically 
-7. Extract the plugin's `arguments.yaml` from the JAR 
-8. Parse remaining arguments using Apache Commons CLI 
-9. Instantiate and execute the plugin 
+1. User runs: `jex [options]` or `jex <plugin-name> [plugin-args...]`
+2. If a built-in command is detected (e.g., `--install`, `--help`, `--list`), execute it and exit
+3. Otherwise, treat the first argument as a plugin name
+4. Look up the plugin in `plugin.yaml` registry
+5. Load the plugin JAR dynamically using URLClassLoader
+6. Instantiate the plugin class and execute it with remaining arguments
+7. The plugin handles its own argument parsing using Apache Commons CLI 
 
 ### Configuration Directory Structure
 
@@ -203,27 +215,28 @@ options:
 Display usage information and available commands:
 
 ```bash
-Jex --help
-Jex -h
-Jex        # No arguments also shows help
+jex --help
+jex -h
+jex        # No arguments also shows help
 ```
 
-### Setup
+### Install
 
 Initialize and install Jex:
 
 ```bash
-Jex --setup
-java -jar Jex.jar --setup  # First-time setup
+jex --install
+java -jar Jex-1.0.1.jar --install  # First-time installation
 ```
 
 This command:
 - Creates configuration directory (OS-specific location)
 - Creates `plugins/` subdirectory
-- Generates default `plugin.yaml` registry with helpful comments
+- Generates default `plugin.yaml` registry with bundled plugins registered
 - Generates default `arguments.yaml` for Jex
-- **Installs** `Jex.jar` to the lib directory
-- **Creates** and installs OS-specific wrapper script (`Jex` or `Jex.bat`)
+- **Installs** `jex.jar` to the lib directory
+- **Installs** bundled plugins (new-plugin) to plugins directory
+- **Creates** and installs OS-specific wrapper script (`jex` or `jex.bat`)
 - **Makes** the script executable (Unix/Linux/macOS)
 - **Checks** if bin directory is in PATH and provides instructions if needed
 
@@ -232,27 +245,40 @@ This command:
 List all installed plugins:
 
 ```bash
-Jex --list
-Jex -l
+jex --list
+jex -l
 ```
 
-Shows all registered plugins from `plugin.yaml` or a helpful message if no plugins are installed.
+Shows all registered plugins from `plugin.yaml`, including bundled plugins like `new-plugin`.
 
-### Generate Plugin Template ⏳ Planned
+## Bundled Plugins
 
-Generate a plugin template/stub for development:
+### new-plugin - Plugin Generator ✅
+
+Create new plugin projects with complete Maven structure:
 
 ```bash
-Jex --generate-plugin <plugin-name>
+jex new-plugin <plugin-name>
+jex new-plugin <plugin-name> --package <package-name>
 ```
 
-This will create a plugin project template with:
-- Plugin class skeleton implementing the `Plugin` interface
-- Sample `arguments.yaml`
-- Maven build configuration
-- README with development instructions
+**Examples:**
+```bash
+# Create plugin with default package
+jex new-plugin my-tool
 
-*Status: Command placeholder exists, implementation pending*
+# Create plugin with custom package
+jex new-plugin my-tool --package com.mycompany.tools
+```
+
+This creates a complete Maven project with:
+- Plugin class skeleton implementing the `Plugin` interface
+- Sample `arguments.yaml` for CLI arguments
+- Maven `pom.xml` configured for Jex plugins
+- `.gitignore` file
+- README with build and installation instructions
+
+The generated project is ready to open in your IDE and start developing.
 
 ## Usage
 
@@ -260,13 +286,19 @@ This will create a plugin project template with:
 
 ```bash
 # Show help
-Jex --help
+jex --help
 
 # List installed plugins
-Jex --list
+jex --list
 
-# Run setup (installs Jex)
-Jex --setup
+# Install Jex
+java -jar Jex-1.0.1.jar --install
+
+# Create a new plugin project
+jex new-plugin my-awesome-tool --package com.example
+
+# Run a plugin
+jex <plugin-name> [args...]
 ```
 
 ### Installing a Plugin ⏳ Manual Process (Automated loading pending)
@@ -295,9 +327,9 @@ Jex --setup
 
 ### Plugin Development Steps
 
-1. **Generate a plugin template** *(planned)*:
+1. **Generate a plugin template**:
    ```bash
-   Jex --generate-plugin my-plugin
+   jex new-plugin my-plugin --package com.example
    ```
 
 2. **Implement the `Plugin` interface** in your main class:
@@ -374,12 +406,12 @@ my-plugin/
 
 3. **The built JAR** will be at:
    ```
-   target/Jex.jar
+   target/Jex-1.0.1.jar
    ```
 
 4. **Install it**:
    ```bash
-   java -jar target/Jex.jar --setup
+   java -jar target/Jex-1.0.1.jar --install
    ```
 
 ### Development Commands
@@ -406,39 +438,53 @@ Jex/
 │   ├── main/
 │   │   ├── java/solutions/cloudbusiness/cli/
 │   │   │   ├── App.java              # Main entry point
-│   │   │   ├── Setup.java            # Setup command implementation
+│   │   │   ├── Install.java          # Install command implementation
 │   │   │   ├── Plugin.java           # Plugin interface
 │   │   │   ├── PluginLoader.java     # Loads plugins from YAML
+│   │   │   ├── PathConfig.java       # OS-aware path management
 │   │   │   └── ArgumentParser.java   # YAML-based argument parser
 │   │   └── resources/
-│   │       ├── Jex.sh          # Unix wrapper script template
-│   │       └── Jex.bat         # Windows wrapper script template
+│   │       ├── jex.sh                # Unix wrapper script template
+│   │       ├── jex.bat               # Windows wrapper script template
+│   │       └── plugins/
+│   │           └── new-plugin.jar    # Bundled plugin generator
 │   └── test/
 │       └── java/solutions/cloudbusiness/cli/
 │           └── AppTest.java
+├── new-plugin/                        # Plugin generator source
+│   ├── src/main/java/solutions/cloudbusiness/cli/plugins/
+│   │   └── NewPlugin.java
+│   └── pom.xml
+├── hello-plugin/                      # Example plugin
 ├── pom.xml                            # Maven build configuration
-└── README.md
+├── CLAUDE.md                          # Project instructions for Claude Code
+├── TODO.md                            # Persistent TODO list
+└── README.md                          # This file
 ```
 
 ## Implementation Status
 
-### ✅ Completed Features
-- Self-installing fat JAR with Maven Shade Plugin
-- OS-specific installation (Linux, macOS, Windows)
-- Wrapper script generation and installation
-- Help system (`--help`, `-h`)
-- Setup command (`--setup`)
-- List plugins command (`--list`, `-l`)
-- YAML-based argument parsing
-- Configuration directory management
+### ✅ Completed Features (v1.0.1)
+- **Minimal core architecture** - Only 3 built-in commands
+- **Self-installing fat JAR** with Maven Shade Plugin
+- **OS-specific installation** (Linux, macOS, Windows)
+- **Wrapper script** generation and installation
+- **Help system** (`--help`, `-h`)
+- **Install command** (`--install`) - renamed from `--setup`
+- **List plugins** command (`--list`, `-l`)
+- **Dynamic plugin loading** - URLClassLoader-based JAR loading
+- **Plugin instantiation and execution**
+- **YAML-based argument parsing** for plugins
+- **Configuration directory management**
+- **Bundled plugin generator** (`new-plugin`) - Creates complete Maven projects
+- **Example plugin** (hello-plugin) demonstrating the system
 
-### ⏳ In Progress / Planned
-- Dynamic plugin JAR loading
-- Plugin argument parsing from JAR resources
-- Plugin instantiation and execution
-- Plugin template generator (`--generate-plugin`)
-- Sample plugin for testing
-- Comprehensive error handling
+### 🚀 Architecture Achievements
+- **Lazy loading** - Plugins only loaded when invoked
+- **Minimal overhead** - Core has no plugin-specific code
+- **Plugin-based extensibility** - Even the generator is a plugin
+- **Zero framework complexity** - Simple Plugin interface (3 methods)
+- **Scales to hundreds of plugins** without performance degradation
 
 ## Dependencies
 
