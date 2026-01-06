@@ -1,4 +1,4 @@
-package solutions.cloudbusiness.cli;
+package org.jex.cli;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -64,7 +64,7 @@ public class Install {
             installWrapperScript();
 
             // Install bundled plugins
-            installBundledPlugins(pluginsPath);
+            //installBundledPlugins(pluginsPath);
 
             System.out.println("\n" + "=".repeat(60));
             System.out.println("Jex installation completed successfully!");
@@ -200,12 +200,6 @@ public class Install {
     private static void createDefaultPluginYaml(String path) throws IOException {
         String defaultContent = "# Jex Plugin Registry\n" +
                 "# Bundled plugins (installed with Jex):\n" +
-                "\n" +
-                "new-plugin:\n" +
-                "  jar: new-plugin.jar\n" +
-                "  class: solutions.cloudbusiness.cli.plugins.NewPlugin\n" +
-                "  version: 1.0.0\n" +
-                "  description: \"Create new Jex plugin projects\"\n" +
                 "\n" +
                 "# Add your custom plugins below in the following format:\n" +
                 "#\n" +

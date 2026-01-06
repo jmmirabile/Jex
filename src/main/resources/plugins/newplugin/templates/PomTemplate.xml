@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
-    <artifactId>hello-plugin</artifactId>
+    <artifactId>${ARTIFACT_ID}</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Hello Plugin</name>
-    <description>A simple hello world plugin for Jex</description>
+    <name>${PLUGIN_NAME_CAPITALIZED} Plugin</name>
+    <description>A Jex plugin</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -22,9 +22,9 @@
     <dependencies>
         <!-- Jex Plugin Interface -->
         <dependency>
-            <groupId>solutions.cloudbusiness.cli</groupId>
+            <groupId>org.jex.cli</groupId>
             <artifactId>Jex</artifactId>
-            <version>1.0.0</version>
+            <version>${JEX_VERSION}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -52,13 +52,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Plugin-Class>com.example.hello.HelloPlugin</Plugin-Class>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
             </plugin>
         </plugins>
     </build>

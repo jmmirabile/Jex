@@ -54,17 +54,16 @@ invoked, ensuring Jex scales to hundreds of plugins without performance impact.
 
 ### Installation
 
-1. **Download** the `Jex-1.0.1.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-1.0.2.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex-1.0.1.jar --install
+   java -jar Jex-1.0.2.jar --install
    ```
    After installation completes, the following has been created:
    * Configuration directories (OS-specific locations)
    * Wrapper script (`jex` on Unix/Linux/macOS, `jex.bat` on Windows)
-   * Bundled `new-plugin` for creating new plugin projects
-   * Default `plugin.yaml` registry file
+   * Default `plugin.yaml` registry file (empty template for developer plugins)
 
 3. **Add to PATH** (if needed):
    - **Linux/macOS**: The installer will tell you if `~/.local/bin` needs to be added to PATH
@@ -73,7 +72,7 @@ invoked, ensuring Jex scales to hundreds of plugins without performance impact.
 4. **Verify installation**:
    ```bash
    jex --help
-   jex --list    # Shows bundled plugins
+   jex new-plugin --help    # Test internal plugin generator
    ```
 
 ### Installation Locations
@@ -155,7 +154,7 @@ my-plugin.jar
 All plugins must implement the `Plugin` interface:
 
 ```java
-package solutions.cloudbusiness.cli;
+package org.jex.cli;
 
 public interface Plugin {
     String getName();
@@ -226,16 +225,15 @@ Initialize and install Jex:
 
 ```bash
 jex --install
-java -jar Jex-1.0.1.jar --install  # First-time installation
+java -jar Jex-1.0.2.jar --install  # First-time installation
 ```
 
 This command:
 - Creates configuration directory (OS-specific location)
 - Creates `plugins/` subdirectory
-- Generates default `plugin.yaml` registry with bundled plugins registered
+- Generates empty `plugin.yaml` registry template
 - Generates default `arguments.yaml` for Jex
 - **Installs** `jex.jar` to the lib directory
-- **Installs** bundled plugins (new-plugin) to plugins directory
 - **Creates** and installs OS-specific wrapper script (`jex` or `jex.bat`)
 - **Makes** the script executable (Unix/Linux/macOS)
 - **Checks** if bin directory is in PATH and provides instructions if needed
@@ -249,11 +247,13 @@ jex --list
 jex -l
 ```
 
-Shows all registered plugins from `plugin.yaml`, including bundled plugins like `new-plugin`.
+Shows all registered plugins from `plugin.yaml`. Note: Internal plugins like `new-plugin` are auto-discovered and don't appear in this list.
 
-## Bundled Plugins
+## Internal Plugins
 
 ### new-plugin - Plugin Generator ✅
+
+**Note:** `new-plugin` is an internal plugin (bundled in Jex.jar) and is automatically discovered. You don't need to install or register it.
 
 Create new plugin projects with complete Maven structure:
 
@@ -292,7 +292,7 @@ jex --help
 jex --list
 
 # Install Jex
-java -jar Jex-1.0.1.jar --install
+java -jar Jex-1.0.2.jar --install
 
 # Create a new plugin project
 jex new-plugin my-awesome-tool --package com.example
@@ -336,7 +336,7 @@ jex <plugin-name> [args...]
    ```java
    package com.example;
 
-   import solutions.cloudbusiness.cli.Plugin;
+   import org.jex.cli.Plugin;
 
    public class MyPlugin implements Plugin {
        @Override
@@ -406,12 +406,12 @@ my-plugin/
 
 3. **The built JAR** will be at:
    ```
-   target/Jex-1.0.1.jar
+   target/Jex-1.0.2.jar
    ```
 
 4. **Install it**:
    ```bash
-   java -jar target/Jex-1.0.1.jar --install
+   java -jar target/Jex-1.0.2.jar --install
    ```
 
 ### Development Commands
@@ -436,26 +436,25 @@ mvn clean
 Jex/
 ├── src/
 │   ├── main/
-│   │   ├── java/solutions/cloudbusiness/cli/
-│   │   │   ├── App.java              # Main entry point
+│   │   ├── java/org/jex/cli/
+│   │   │   ├── App.java              # Main entry point and command routing
 │   │   │   ├── Install.java          # Install command implementation
-│   │   │   ├── Plugin.java           # Plugin interface
-│   │   │   ├── PluginLoader.java     # Loads plugins from YAML
+│   │   │   ├── Plugin.java           # Plugin interface (3 methods)
+│   │   │   ├── PluginLoader.java     # Dynamic JAR loading via URLClassLoader
 │   │   │   ├── PathConfig.java       # OS-aware path management
-│   │   │   └── ArgumentParser.java   # YAML-based argument parser
+│   │   │   ├── ArgumentParser.java   # YAML to CLI options conversion
+│   │   │   └── JexMavenUtil.java     # Maven utilities (dynamic version detection)
+│   │   ├── java/org/jex/plugins/
+│   │   │   └── newplugin/
+│   │   │       └── NewPlugin.java    # Internal plugin generator
 │   │   └── resources/
 │   │       ├── jex.sh                # Unix wrapper script template
 │   │       ├── jex.bat               # Windows wrapper script template
 │   │       └── plugins/
-│   │           └── new-plugin.jar    # Bundled plugin generator
+│   │           └── newplugin/        # Plugin generator resources
 │   └── test/
-│       └── java/solutions/cloudbusiness/cli/
+│       └── java/org/jex/cli/
 │           └── AppTest.java
-├── new-plugin/                        # Plugin generator source
-│   ├── src/main/java/solutions/cloudbusiness/cli/plugins/
-│   │   └── NewPlugin.java
-│   └── pom.xml
-├── hello-plugin/                      # Example plugin
 ├── pom.xml                            # Maven build configuration
 ├── CLAUDE.md                          # Project instructions for Claude Code
 ├── TODO.md                            # Persistent TODO list
@@ -464,7 +463,7 @@ Jex/
 
 ## Implementation Status
 
-### ✅ Completed Features (v1.0.1)
+### ✅ Completed Features (v1.0.2)
 - **Minimal core architecture** - Only 3 built-in commands
 - **Self-installing fat JAR** with Maven Shade Plugin
 - **OS-specific installation** (Linux, macOS, Windows)
@@ -476,8 +475,10 @@ Jex/
 - **Plugin instantiation and execution**
 - **YAML-based argument parsing** for plugins
 - **Configuration directory management**
-- **Bundled plugin generator** (`new-plugin`) - Creates complete Maven projects
-- **Example plugin** (hello-plugin) demonstrating the system
+- **Dynamic version detection** - Uses Maven metadata API for automatic version resolution
+- **Internal plugin discovery** - Automatic discovery of plugins in `org.jex.plugins` package
+- **Plugin generator** (`new-plugin`) - Internal plugin that creates complete Maven projects with correct version
+- **Package reorganization** - Migrated from `solutions.cloudbusiness.cli` to `org.jex.cli`
 
 ### 🚀 Architecture Achievements
 - **Lazy loading** - Plugins only loaded when invoked
@@ -490,6 +491,7 @@ Jex/
 
 - **Apache Commons CLI 1.11.0**: Command-line argument parsing
 - **SnakeYAML 2.5**: YAML configuration file parsing
+- **Maven Model 3.9.6**: Maven metadata reading (for dynamic version detection)
 - **JUnit 3.8.1**: Testing framework
 - **Maven Shade Plugin 3.5.1**: Fat JAR creation
 

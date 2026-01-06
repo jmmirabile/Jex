@@ -1,4 +1,4 @@
-package solutions.cloudbusiness.cli;
+package org.jex.cli;
 
 public interface Plugin {
     String getName();

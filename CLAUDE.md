@@ -266,6 +266,46 @@ jex test <path>                        # hypothetical test runner plugin
 3. ✅ **Move generator to a plugin** (bundled by default during install)
 4. ✅ Hardcode built-in commands in App.java (remove arguments.yaml generation from Setup)
 
+## TODO: v1.0.2 Bug Fixes and Improvements
+
+### Critical Fixes
+- [ ] **Fix version hardcoding in NewPlugin.java**
+  - Problem: Version is hardcoded in multiple places (lines 260, 563, 599)
+  - Line 260: Generated pom.xml references Jex 1.0.0 (should be 1.0.1)
+  - Line 563: Maven install uses 1.0.1 (correct)
+  - Line 599: Version check looks for 1.0.1 (correct)
+  - Solution: Implement dynamic version reading from Jex JAR manifest
+    ```java
+    private String getJexVersion() {
+        try {
+            // Try to read from manifest
+            Package pkg = Install.class.getPackage();
+            String version = pkg.getImplementationVersion();
+            if (version != null) return version;
+
+            // Fallback: read from pom.properties inside JAR
+            InputStream is = NewPlugin.class.getResourceAsStream(
+                "/META-INF/maven/solutions.cloudbusiness.cli/Jex/pom.properties");
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                return props.getProperty("version", "1.0.1");
+            }
+        } catch (Exception e) {
+            // Fallback to constant
+        }
+        return "1.0.1"; // Last resort fallback
+    }
+    ```
+  - Use this method in generatePomXml(), installJexToMavenRepo(), and isJexInMavenRepo()
+  - Test: Generate plugin and verify it references correct Jex version
+
+### Minor Fixes
+- [ ] Fix "Commander" → "Jex" comment in App.java:69
+- [ ] Fix URLClassLoader resource leak in PluginLoader.java:58
+  - Consider using try-with-resources or caching loaders
+- [ ] Update CLAUDE.md version reference (line 73 says "v1.0.0", should be "v1.0.1")
+
 ## TODO: v2.0.0 Architectural Refactoring
 
 ### Phase 1: Fix Current Issues
@@ -320,6 +360,58 @@ jex test <path>                        # hypothetical test runner plugin
   - Update pom.xml to version 2.0.0
   - Create git tag v2.0.0
   - Update CHANGELOG if it exists
+
+## Possible New Features/Improvements
+
+### Bundled Plugin Protection
+
+**Problem:** Users might accidentally delete bundled plugins (like new-plugin.jar) when cleaning up their plugins directory, thinking they're removing their own custom plugins.
+
+**Possible Solutions:**
+
+1. **Different filename convention**
+   - Rename `new-plugin.jar` → `jex-new-plugin.jar` or `_jex-new-plugin.jar`
+   - Makes bundled plugins visually distinct from user plugins
+   - Pros: Simple, clear visual distinction
+   - Cons: Naming convention must be documented and maintained
+
+2. **Separate directory for bundled plugins**
+   - User plugins: `~/.config/Jex/plugins/`
+   - Bundled plugins: `~/.config/Jex/system/` or `~/.local/lib/jex/plugins/`
+   - Pros: Clear physical separation
+   - Cons: More complex directory structure, need to search multiple locations
+
+3. **Mark as bundled in plugin.yaml**
+   ```yaml
+   new-plugin:
+     jar: new-plugin.jar
+     class: org.jex.plugins.newplugin.NewPlugin
+     version: 1.0.0
+     bundled: true  # Mark as system plugin
+     description: "Plugin generator"
+   ```
+   - Could show warnings or prevent deletion of bundled plugins via commands
+   - Pros: Metadata-driven, enables programmatic protection
+   - Cons: Only works if user uses Jex commands to manage plugins
+
+4. **Load bundled plugins from jex.jar itself**
+   - Don't extract bundled plugins to filesystem at all
+   - Load them directly from resources inside jex.jar
+   - Pros: Most protected, can't be accidentally deleted
+   - Cons: More complex plugin loading, can't easily update bundled plugins
+
+5. **Easy reinstall mechanism**
+   - `jex --install` always reinstalls bundled plugins (already does this)
+   - Document this in help/README
+   - Pros: Self-healing, simple to implement
+   - Cons: Relies on user knowing to reinstall, temporary loss of functionality
+
+**Recommended Approach:**
+Combination of Option 3 + 5:
+- Mark bundled plugins with `bundled: true` flag in plugin.yaml
+- `jex --install` reinstalls bundled plugins (already implemented)
+- Document the reinstall mechanism clearly
+- Simple, clear, and self-healing
 
 ## Notes
 

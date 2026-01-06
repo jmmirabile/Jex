@@ -1,0 +1,19 @@
+# ${PLUGIN_NAME_CAPITALIZED} Plugin CLI Arguments
+
+options:
+  - name: help
+    short: h
+    long: help
+    description: "Display help information"
+    required: false
+    hasArg: false
+
+  # TODO: Add your custom arguments here
+  # Example:
+  # - name: input
+  #   short: i
+  #   long: input-file
+  #   description: "Input file path"
+  #   required: true
+  #   hasArg: true
+  #   argName: "file"

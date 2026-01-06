@@ -1,12 +1,17 @@
-package solutions.cloudbusiness.cli.plugins;
+package org.jex.plugins.newplugin;
 
-import solutions.cloudbusiness.cli.Plugin;
+import org.jex.cli.Plugin;
+import org.jex.cli.PathConfig;
+import org.jex.cli.JexMavenUtil;
+import org.jex.cli.ArgumentParser;
 import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,15 +25,8 @@ public class NewPlugin implements Plugin {
 
     @Override
     public void execute(String[] args) {
-        // Create options
-        Options options = new Options();
-        options.addOption("h", "help", false, "Display help information");
-        options.addOption(Option.builder("p")
-                .longOpt("package")
-                .hasArg()
-                .argName("package")
-                .desc("Java package name for the plugin")
-                .build());
+        // Load options from bundled arguments.yaml
+        Options options = ArgumentParser.loadOptionsFromResource("/plugins/newplugin/arguments.yaml", this.getClass());
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -51,6 +49,17 @@ public class NewPlugin implements Plugin {
 
             String pluginName = remainingArgs[0];
             String javaPackage = cmd.getOptionValue("package");
+
+            // Check Maven availability
+            if (!isMavenAvailable()) {
+                System.err.println("\nError: Maven is required for plugin development");
+                System.err.println("Please install Maven: https://maven.apache.org/install.html");
+                System.err.println("\nVerify installation with: mvn --version");
+                System.exit(1);
+            }
+
+            // Install Jex to Maven local repo (if not already there)
+            installJexToMavenRepo();
 
             // Generate the plugin
             generate(pluginName, javaPackage);
@@ -216,6 +225,7 @@ public class NewPlugin implements Plugin {
 
     private void generatePomXml(Path projectPath, String pluginName) throws IOException {
         String artifactId = pluginName + "-plugin";
+        String jexVersion = JexMavenUtil.getVersion();
         String content = String.format("""
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -241,9 +251,9 @@ public class NewPlugin implements Plugin {
     <dependencies>
         <!-- Jex Plugin Interface -->
         <dependency>
-            <groupId>solutions.cloudbusiness.cli</groupId>
+            <groupId>org.jex.cli</groupId>
             <artifactId>Jex</artifactId>
-            <version>1.0.0</version>
+            <version>%s</version>
             <scope>provided</scope>
         </dependency>
 
@@ -275,7 +285,7 @@ public class NewPlugin implements Plugin {
         </plugins>
     </build>
 </project>
-""", artifactId, capitalize(pluginName));
+""", artifactId, capitalize(pluginName), jexVersion);
 
         writeFile(projectPath.resolve("pom.xml"), content);
         System.out.println("✓ Generated pom.xml");
@@ -286,7 +296,8 @@ public class NewPlugin implements Plugin {
         String content = String.format("""
 package %s;
 
-import solutions.cloudbusiness.cli.Plugin;
+import org.jex.cli.Plugin;
+import org.jex.cli.ArgumentParser;
 import org.apache.commons.cli.*;
 
 public class %sPlugin implements Plugin {
@@ -298,10 +309,8 @@ public class %sPlugin implements Plugin {
 
     @Override
     public void execute(String[] args) {
-        // Create options
-        Options options = new Options();
-        options.addOption("h", "help", false, "Display help information");
-        // TODO: Add your custom options here
+        // Load options from bundled arguments.yaml
+        Options options = ArgumentParser.loadOptionsFromResource("/arguments.yaml", this.getClass());
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -443,7 +452,7 @@ jex %s [options]
 
 TODO: Add license information
 """, capitalize(pluginName), pluginName, pluginName, pluginName, packageName, className,
-    pluginName, pluginName, pluginName, packageName.replace(".", "/"), className, className);
+                pluginName, pluginName, pluginName, packageName.replace(".", "/"), className, className);
 
         writeFile(projectPath.resolve("README.md"), content);
         System.out.println("✓ Generated README.md");
@@ -515,4 +524,77 @@ dependency-reduced-pom.xml
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
+
+    private boolean isMavenAvailable() {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("mvn", "--version");
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+            return exitCode == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void installJexToMavenRepo() {
+        System.out.println("\nChecking Maven local repository...");
+
+        // Check if already installed (avoid re-installing every time)
+        if (isJexInMavenRepo()) {
+            System.out.println("✓ Jex already in Maven local repository");
+            return;
+        }
+
+        System.out.println("Installing Jex to Maven local repository...");
+        String jexJar = PathConfig.getLibDirectory() + File.separator + "jex.jar";
+        String jexVersion = JexMavenUtil.getVersion();
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    "mvn", "install:install-file",
+                    "-Dfile=" + jexJar,
+                    "-DgroupId=org.jex.cli",
+                    "-DartifactId=Jex",
+                    "-Dversion=" + jexVersion,
+                    "-Dpackaging=jar",
+                    "-q"  // Quiet mode
+            );
+
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            // Consume output to prevent blocking
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Optionally print output for debugging
+                    // System.out.println(line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                System.out.println("✓ Jex installed to Maven local repository");
+            } else {
+                System.err.println("⚠ Warning: Failed to install Jex to Maven repository");
+                System.err.println("  Plugin development may require manual Maven setup");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠ Warning: Could not install to Maven repo: " + e.getMessage());
+            System.err.println("  Plugin development may require manual Maven setup");
+        }
+    }
+
+    private boolean isJexInMavenRepo() {
+        String jexVersion = JexMavenUtil.getVersion();
+        String mavenRepo = System.getProperty("user.home") +
+                File.separator + ".m2" + File.separator + "repository" +
+                File.separator + "org" + File.separator + "jex" +
+                File.separator + "cli" + File.separator + "Jex" +
+                File.separator + jexVersion + File.separator + "Jex-" + jexVersion + ".jar";
+        return new File(mavenRepo).exists();
+    }
 }
+
