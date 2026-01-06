@@ -24,6 +24,7 @@ public class App
         System.out.println("     --install             Install Jex (create directories, install JAR, wrapper scripts)");
         System.out.println("  -l,--list                List all installed plugins");
         System.out.println("  -h,--help                Display help information");
+        System.out.println("  -v,--version                Display version");
 
         System.out.println("\nExamples:");
         System.out.println("  jex --install                              Install Jex");
@@ -47,6 +48,11 @@ public class App
                 printJexHelp(null);
                 return;
             }
+            if (firstArg.equals("-v") || firstArg.equals("--version")) {
+                System.out.println(JexMavenUtil.getVersion());
+                return;
+            }
+
         }
 
         String argumentsYamlPath = PathConfig.getArgumentsYamlPath();
@@ -82,6 +88,11 @@ public class App
 
             if (cmd.hasOption("l") || cmd.hasOption("list")) {
                 listPlugins();
+                return;
+            }
+
+            if (cmd.hasOption("v") || cmd.hasOption("version")) {
+                JexMavenUtil.getVersion();
                 return;
             }
         }

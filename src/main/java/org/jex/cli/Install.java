@@ -237,7 +237,15 @@ public class Install {
                 "    long: help\n" +
                 "    description: \"Display help information\"\n" +
                 "    required: false\n" +
-                "    hasArg: false\n";
+                "    hasArg: false\n" +
+                "\n" +
+                "  - name: version\n" +
+                "    short: v\n" +
+                "    long: version\n" +
+                "    description: \"Display version\"\n" +
+                "    required: false\n" +
+                "    hasArg: false\n"
+                ;
 
         try (FileWriter writer = new FileWriter(path)) {
             writer.write(defaultContent);

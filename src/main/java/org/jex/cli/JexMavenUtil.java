@@ -27,12 +27,14 @@ public class JexMavenUtil {
      * @return The Jex version string (e.g., "1.0.1")
      */
     public static String getVersion() {
+
         if (cachedVersion != null) {
             return cachedVersion;
         }
 
         cachedVersion = detectVersion();
         return cachedVersion;
+
     }
 
     /**
@@ -43,6 +45,7 @@ public class JexMavenUtil {
         try {
             Package pkg = JexMavenUtil.class.getPackage();
             String version = pkg.getImplementationVersion();
+            //System.out.println(version);
             if (version != null && !version.isEmpty()) {
                 return version;
             }
@@ -57,6 +60,7 @@ public class JexMavenUtil {
                 MavenXpp3Reader reader = new MavenXpp3Reader();
                 Model model = reader.read(is);
                 String version = model.getVersion();
+                //System.out.println(version);
                 if (version != null && !version.isEmpty()) {
                     return version;
                 }
@@ -72,6 +76,7 @@ public class JexMavenUtil {
                 Properties props = new Properties();
                 props.load(is);
                 String version = props.getProperty("version");
+                //System.out.println(version);
                 if (version != null && !version.isEmpty()) {
                     return version;
                 }
