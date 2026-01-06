@@ -266,102 +266,182 @@ jex test <path>                        # hypothetical test runner plugin
 3. ✅ **Move generator to a plugin** (bundled by default during install)
 4. ✅ Hardcode built-in commands in App.java (remove arguments.yaml generation from Setup)
 
-## TODO: v1.0.2 Bug Fixes and Improvements
+## Completed (v1.0.2 - Released 2026-01-05)
 
-### Critical Fixes
-- [ ] **Fix version hardcoding in NewPlugin.java**
-  - Problem: Version is hardcoded in multiple places (lines 260, 563, 599)
-  - Line 260: Generated pom.xml references Jex 1.0.0 (should be 1.0.1)
-  - Line 563: Maven install uses 1.0.1 (correct)
-  - Line 599: Version check looks for 1.0.1 (correct)
-  - Solution: Implement dynamic version reading from Jex JAR manifest
-    ```java
-    private String getJexVersion() {
-        try {
-            // Try to read from manifest
-            Package pkg = Install.class.getPackage();
-            String version = pkg.getImplementationVersion();
-            if (version != null) return version;
+- [x] Package reorganization (solutions.cloudbusiness.cli → org.jex.cli)
+- [x] Internal plugin discovery and architecture
+- [x] Fixed version detection in JexMavenUtil (using JexMavenUtil.getVersion())
+- [x] Cleaned up plugin registry generation (removed new-plugin from plugin.yaml)
+- [x] Updated README.md for v1.0.2
+- [x] Released v1.0.2 to GitHub
 
-            // Fallback: read from pom.properties inside JAR
-            InputStream is = NewPlugin.class.getResourceAsStream(
-                "/META-INF/maven/solutions.cloudbusiness.cli/Jex/pom.properties");
-            if (is != null) {
-                Properties props = new Properties();
-                props.load(is);
-                return props.getProperty("version", "1.0.1");
-            }
-        } catch (Exception e) {
-            // Fallback to constant
-        }
-        return "1.0.1"; // Last resort fallback
-    }
-    ```
-  - Use this method in generatePomXml(), installJexToMavenRepo(), and isJexInMavenRepo()
-  - Test: Generate plugin and verify it references correct Jex version
+## TODO: v1.0.3 - Plugin Management CRUD Operations
 
-### Minor Fixes
-- [ ] Fix "Commander" → "Jex" comment in App.java:69
-- [ ] Fix URLClassLoader resource leak in PluginLoader.java:58
-  - Consider using try-with-resources or caching loaders
-- [ ] Update CLAUDE.md version reference (line 73 says "v1.0.0", should be "v1.0.1")
+### Feature: Developer Plugin Management Commands
 
-## TODO: v2.0.0 Architectural Refactoring
+Implement CRUD operations for plugin management to improve developer experience.
 
-### Phase 1: Fix Current Issues
-- [ ] Fix `--java-package` option for `--generate-plugin`
-  - Add `--java-package` option definition to arguments.yaml in Setup.java
-  - Test: `jex --generate-plugin my-plugin --java-package com.example`
+**Current State:**
+- Developers must manually copy JARs to `~/.config/Jex/plugins/`
+- Developers must manually edit `plugin.yaml` to register plugins
+- No easy way to update or remove plugins
 
-### Phase 2: Refactor to Minimal Core
-- [ ] Rename `--setup` to `--install` throughout codebase
-  - Update App.java
-  - Update Setup.java
-  - Update CLAUDE.md documentation
-  - Update README.md
-  - Update help text
+**Goal:**
+Provide command-line tools for plugin lifecycle management.
 
-- [ ] Move built-in command definitions from YAML to code
-  - Define Options directly in App.java (--install, --help, --list)
-  - Remove `createDefaultArgumentsYaml()` from Setup.java
-  - Remove arguments.yaml file generation entirely
-  - Update ArgumentParser.java to only handle plugin-specific YAML parsing
+### Commands to Implement
 
-### Phase 3: Extract Generator to Plugin
-- [ ] Create generator-plugin as separate Maven project
-  - Move PluginGenerator.java logic to new plugin project
-  - Implement Plugin interface
-  - Package as generator-plugin.jar
+#### 1. Install Plugin (Create)
+```bash
+jex --install-plugin <name> --jar <jar-file>
+```
+- **Behavior:**
+  - Copy JAR to `~/.config/Jex/plugins/`
+  - Load JAR and extract metadata (class, version, description)
+  - Add entry to `plugin.yaml` with key `<name>`
+  - Verify plugin works with `jex <name> --help`
+- **Error handling:**
+  - Error if plugin already exists in plugin.yaml
+  - Error if JAR file doesn't exist
+  - Error if JAR is not a valid Jex plugin (missing Plugin interface)
 
-- [ ] Update installation to bundle generator plugin
-  - Copy generator-plugin.jar to plugins directory during install
-  - Auto-register in plugin.yaml during install
-  - Document as bundled plugin in README
+#### 2. Update Plugin (Update)
+```bash
+jex --update-plugin <name> --jar <jar-file>
+```
+- **Behavior:**
+  - Replace existing JAR in `~/.config/Jex/plugins/`
+  - Update entry in `plugin.yaml` (version, class, description)
+  - Verify updated plugin works
+- **Error handling:**
+  - Error if plugin doesn't exist in plugin.yaml
+  - Error if JAR file doesn't exist
 
-- [ ] Remove PluginGenerator.java from core
-  - Delete PluginGenerator.java from core codebase
-  - Remove --generate-plugin handling from App.java
-  - Update tests if any
+#### 3. Uninstall Plugin (Delete)
+```bash
+jex --uninstall-plugin <name>
+```
+- **Behavior:**
+  - Remove JAR from `~/.config/Jex/plugins/`
+  - Remove entry from `plugin.yaml`
+  - Display confirmation message
+- **Error handling:**
+  - Error if plugin doesn't exist
+  - Optionally: prompt for confirmation before deletion
 
-### Phase 4: Testing & Documentation
-- [ ] Test all functionality
-  - `jex --install` works correctly
-  - `jex --help` displays correct information
-  - `jex --list` shows bundled generator plugin
-  - `jex generate my-plugin --package com.example` works
-  - Plugin loading and execution works as before
+#### 4. Enhanced Read (Optional)
+```bash
+jex --show-plugin <name>
+```
+- **Behavior:**
+  - Display detailed information about a specific plugin
+  - Show: name, JAR, class, version, description, location
+- Note: `jex --list` already provides basic read functionality
 
-- [ ] Update documentation
-  - Update README.md with new architecture
-  - Update CLAUDE.md (this file)
-  - Add migration guide for v1.0.0 → v2.0.0
+### Implementation Tasks
 
-- [ ] Version and release
-  - Update pom.xml to version 2.0.0
-  - Create git tag v2.0.0
-  - Update CHANGELOG if it exists
+- [ ] **Add new command-line options to App.java**
+  - Add `--install-plugin` option
+  - Add `--update-plugin` option
+  - Add `--uninstall-plugin` option
+  - Optional: Add `--show-plugin` option
 
-## Possible New Features/Improvements
+- [ ] **Create PluginManager.java utility class**
+  - `installPlugin(String name, String jarPath)` method
+  - `updatePlugin(String name, String jarPath)` method
+  - `uninstallPlugin(String name)` method
+  - `loadPluginMetadata(String jarPath)` - extract class, version, description
+  - `updatePluginYaml(String name, PluginMetadata metadata)` method
+  - `removeFromPluginYaml(String name)` method
+
+- [ ] **Metadata extraction**
+  - Load JAR and instantiate plugin to get metadata
+  - Read version from JAR manifest or prompt user
+  - Read description from manifest or prompt user
+  - Validate plugin implements Plugin interface
+
+- [ ] **Update arguments.yaml**
+  - Add definitions for new options
+
+- [ ] **Error handling**
+  - Clear error messages for all failure scenarios
+  - Validation of JAR files
+  - Validation of plugin.yaml integrity
+
+- [ ] **Testing**
+  - Test install new plugin
+  - Test install duplicate (should error)
+  - Test update existing plugin
+  - Test update non-existent (should error)
+  - Test uninstall existing plugin
+  - Test uninstall non-existent (should error)
+
+- [ ] **Documentation**
+  - Update README.md with new commands
+  - Add examples to README
+  - Update CLAUDE.md
+
+### Notes
+- `jex --install` (no args) still installs/updates Jex itself (safe, preserves plugin.yaml)
+- Plugin management commands only affect developer plugins
+- Internal plugins (like `new-plugin`) are not affected
+- Consider adding `--force` flag for update/uninstall if needed
+
+## Possible Future Architectures and Features
+
+### Multi-Build-Tool Support (Gradle, Ant, SBT)
+
+**Context:** Currently `new-plugin` (internal plugin) only generates Maven projects. Users may want Gradle, Ant, or SBT.
+
+**Initial Thought:** Add `--build` flag to `new-plugin`:
+```bash
+jex new-plugin my-tool --build gradle
+jex new-plugin my-tool --build ant
+jex new-plugin my-tool --build sbt
+```
+
+**Problem: JAR Bloat**
+- Supporting multiple build tools requires bundling their libraries in Jex JAR
+- Gradle/Ant/SBT dependencies would significantly increase Jex size
+- Violates "keep Jex small and light" principle
+
+**Recommended Architecture: Hybrid Approach**
+
+**Internal (bundled in Jex.jar):**
+- `new-plugin` - Maven only (most common, minimal dependencies)
+- Always available, no installation needed
+
+**External (optional plugins):**
+- `new-gradle-plugin` - Separate JAR with Gradle-specific libraries
+- `new-ant-plugin` - Separate JAR with Ant-specific libraries
+- `new-sbt-plugin` - Separate JAR with SBT-specific libraries
+- Users install only what they need
+
+**Usage:**
+```bash
+# Maven (always available)
+jex new-plugin my-tool
+
+# Gradle (if installed)
+jex --install-plugin new-gradle-plugin --jar new-gradle-plugin.jar
+jex new-gradle-plugin my-tool
+
+# User can create shell alias for convenience
+alias jexgradle="jex new-gradle-plugin"
+jexgradle my-tool
+```
+
+**Benefits:**
+- ✅ Jex core stays small and light
+- ✅ Users only install what they need
+- ✅ No forced dependency bloat
+- ✅ Extensible by community (anyone can create build tool generators)
+- ✅ Maven default covers 80% of use cases
+
+**Implementation Notes:**
+- Each build tool generator is its own plugin project
+- All generators produce compatible JARs (Plugin interface is build-tool agnostic)
+- Community could contribute additional generators (Buck, Bazel, etc.)
 
 ### Bundled Plugin Protection
 
@@ -415,7 +495,7 @@ Combination of Option 3 + 5:
 
 ## Notes
 
-- Current version: 1.0.1 (as of 2026-01-03)
+- Current version: 1.0.2 (as of 2026-01-05)
 - Project renamed from "Commander" to "Jex" on 2026-01-03
 - Main branch: `main`
 - Deployment: Fat JAR distribution (`jex.jar`)
