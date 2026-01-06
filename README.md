@@ -4,51 +4,69 @@ A plugin-based CLI framework for Java that allows developers to create modular, 
 
 ## Overview
 
-I had multiple Java "test" apps spread out across project directories. I need a way to organize them and combine them 
-into a single framework. I came up with this idea based on another project developed using Python. 
+I had multiple Java "test" apps spread out across project directories. I needed a way to organize them and combine them 
+into a single framework. It seemed I could mimic similar implementation I did in Python. 
 
-I'm calling it Jex. It is a Java-based CLI framework that enables users to execute plugins through a simple 
-command-line interface. Plugins are self-contained JAR files that can be dropped into the plugins directory 
-and registered for use.
+I'm calling it Jex, short for Java Executor. It is a Java-based command line, plugin framework. Plugins are self-contained 
+JAR files that can be dropped into the plugins directory and registered in a plugin.yaml file.
 
-As I worked through the design, I decided to use Claude Code to help me get it done. The amount of time saved using
+As I worked through the design, I decided to use Claude Code as well. The amount of time saved using
 AI tools like Claude is invaluable. Coding with AI is like having a robot or a development partner that can type 1000 
-characters per second. The more specific you can be when describing each component, the better 
-the resulting code will be. 
+characters per second. The more specific you can be when describing code or components, the better the result.
 
 However, I will point out, I came up with the architecture, plugin system, had written some of the code already and 
-decided on which libraries to use. 
+decided on which libraries to use. When using AI for coding, we still need know what you're building, what good design is,
+as well as best practices. Use AI as a powerful assistant, but not a replacement for thinking.
 
-You still need to understand what you're building, use AI as a powerful assistant, but not a replacement for thinking.
-
-It was an iterative process, not a single prompt to perfect code experience. It was conversational, resulting in 
-refinement, testing and iteration. Code had to be reviewed, I knew what I wanted, reviewed the code, suggested changes, 
+It was an iterative process, certainly not a single prompt that produced final application. It's cool to discuss design,
+code and changes with AI. It really does feel natural and they are doing a great job with the natural conversational 
+interaction. The cooperative coding session is always conversational, resulting in refinement, testing and iteration. 
+Code has to be reviewed, tested, retested and changed. I knew what I wanted, reviewed and tested the code, suggested changes, 
 and drove the effort. 
 
-## Architecture Origins
-This architecture was informed by lessons learned from a Python-based multi-platform REST client framework I previously 
-built. With that project, I discovered:
+I think its important to talk about the AI interaction. While AI can write code way faster than us humans, it does make 
+mistakes and lose the thread. There are also technical issues. If your IDE crashes, you may have to retrain your AI partner.
+When you start a new AI session, you need to instruct the AI to relearn your project and it does sometimes seem to have a 
+slightly different perspective on where you left off. For Claude Code specifically, you have to tell it to write the 
+TODO list to the project CLAUDE.md file. I did that, my IDE hung (Intellij) and when I restarted, did some work and 
+instructed Claude to update the TODO list, it created a new TODO.md file despite the fact there were existing TODO items
+in the CLAUDE.md file.
 
-- **Performance degradation** as API platforms were added, the client became slower. This led to the item below.
-- The importance of **lazy loading**  or **on-demand loading** - Only load what you're executing.
+## Architecture Origins
+The idea or concept behind this is based on the concept and lessons learned from my Python-based multi-platform REST client framework 
+project. Again, this was created for my use case, consolidating Java test classes. For example, I have a Java Test class that 
+connects to HTTPS endpoints with different TLS versions, ciphers, and keystores and certificate bundles. While that can be 
+done with openssl, sometimes showing others that the HTTPS endpont works with Java too. As we all know, sometimes you have to 
+prove something works. So, it's meant to be simple to migrate test programs to Jex and simple to run. The user should be able to 
+type "jex" and see help and the available options. So, you can type "jex -h" or "jex --list" to see plugins, or "jex plugin-name -h" 
+to see the Plugin's help and options.  
+
+- **Lazy loading** or **on-demand loading** of plugins. The first argument is either a Jex argument or the name of a plugin. Only that plugin is loaded
+  - As the number of plugins increases, loading them all would make Jex slower. No need to load all the plugins at once.
 - **Simplicity beats complexity** - Frameworks can become overhead, introduce unnecessary complexity, design challenges 
   due to the framework requirements. I reviewed several Python "cli" tools, but they seemed to add unnecessary complexity.
   For Jex, I could have used Picocli, but it doesn't lazy load and requires changes to the bootstrap or main 
   application. Jex is simple, small and extensible and adding new plugins has no impact on Jex speed and 
   does not require a recompile.
-- **YAML-based plugin registries** are cleaner than code-based registration. 
-
-Jex applies these hard-won lessons from day one: lazy plugin loading, minimal framework
-complexity, and a focus on developer experience. Each plugin is isolated and only loaded when
-invoked, ensuring Jex scales to hundreds of plugins without performance impact.
+- **YAML-based plugin registries** are cleaner than code-based registration.
+  - I considered using a simple properties file, but they would get messy as plugin count increased.
+  - Yaml is easier to read. A fair trade off I think. 
+- Each plugin is isolated and only loaded when invoked.
+- Minimal framework complexity - It's really just a bootstrap for command line apps.
+- Complete separation of concerns - Each plugin does it's own thing and should have no dependencies on others (unless you want them to)
+  - There is nothing keeping anyone from writing plugins that are executed in serieds or have some relationship.
+  - A plugin can use any Java library or framework as needed, but those resources should be within the Jar file as plugins are installed as jar files. 
 
 
 **Key Features:**
 - Self-installing fat JAR with OS-specific wrapper scripts
 - YAML-based configuration for arguments and plugins
+- **Arguments** are defined in a yaml file, not code!
 - Dynamic plugin loading from JAR files
 - Built-in help and plugin management commands
-- Zero configuration required - just download and run setup
+- Zero configuration required - just download and run "java -jar <jex jar file> --install"
+- Update Jex without overwriting the installed plugins.
+- Runs on Linux, MacOS and Windows
 
 ## Quick Start
 
