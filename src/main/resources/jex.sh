@@ -17,5 +17,17 @@ if [ ! -f "$JEX_JAR" ]; then
     exit 1
 fi
 
-# Run Jex with all arguments passed through
-exec java -jar "$JEX_JAR" "$@"
+# Separate Java options from Jex arguments
+JAVA_OPTS=""
+JEX_ARGS=()
+
+for arg in "$@"; do
+    if [[ "$arg" == -D* ]] || [[ "$arg" == -X* ]] || [[ "$arg" == -javaagent:* ]]; then
+        JAVA_OPTS="$JAVA_OPTS $arg"
+    else
+        JEX_ARGS+=("$arg")
+    fi
+done
+
+# Run Jex with Java options and Jex arguments separated
+exec java $JAVA_OPTS -jar "$JEX_JAR" "${JEX_ARGS[@]}"

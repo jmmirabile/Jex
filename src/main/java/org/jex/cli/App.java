@@ -1,7 +1,5 @@
 package org.jex.cli;
 
-import org.apache.commons.cli.*;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Enumeration;
@@ -15,7 +13,12 @@ import java.util.jar.JarEntry;
  */
 public class App
 {
-    public static void printJexHelp(Options options) {
+
+    private static void println(String msg) {
+        System.out.println(msg);
+    }
+
+    public static void printJexHelp() {
         System.out.println("Jex - Plugin-based CLI Framework");
         System.out.println("\nUsage:");
         System.out.println("  jex [options]           - Run Jex built-in commands");
@@ -45,9 +48,15 @@ public class App
             }
 
             if (firstArg.equals("-h") || firstArg.equals("--help")) {
-                printJexHelp(null);
+                printJexHelp();
                 return;
             }
+
+            if (firstArg.equals("-l") || firstArg.equals("--list")) {
+                listPlugins();
+                return;
+            }
+
             if (firstArg.equals("-v") || firstArg.equals("--version")) {
                 System.out.println(JexMavenUtil.getVersion());
                 return;
@@ -55,15 +64,15 @@ public class App
 
         }
 
-        String argumentsYamlPath = PathConfig.getArgumentsYamlPath();
+        //String argumentsYamlPath = PathConfig.getArgumentsYamlPath();
 
         // Load Jex's options from arguments.yaml
-        Options jexOptions = ArgumentParser.loadOptionsFromYaml(argumentsYamlPath);
+        //Options jexOptions = ArgumentParser.loadOptionsFromYaml(argumentsYamlPath);
 
         // Parse command line arguments
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = null;
-
+        //CommandLineParser parser = new DefaultParser();
+        //CommandLine cmd = null;
+        /**
         try {
             // Try to parse as Jex arguments (only if args start with -)
             if (args.length > 0 && args[0].startsWith("-")) {
@@ -73,29 +82,8 @@ public class App
             // If parsing fails, it might be a plugin command
             cmd = null;
         }
+         **/
 
-        // Handle Jex built-in commands
-        if (cmd != null) {
-            if (cmd.hasOption("install")) {
-                Install.run();
-                return;
-            }
-
-            if (cmd.hasOption("h") || cmd.hasOption("help")) {
-                printJexHelp(jexOptions);
-                return;
-            }
-
-            if (cmd.hasOption("l") || cmd.hasOption("list")) {
-                listPlugins();
-                return;
-            }
-
-            if (cmd.hasOption("v") || cmd.hasOption("version")) {
-                JexMavenUtil.getVersion();
-                return;
-            }
-        }
 
         // If no Jex options matched, try to execute as a plugin
         if (args.length > 0) {
@@ -143,7 +131,7 @@ public class App
             }
         } else {
             // No arguments provided
-            printJexHelp(jexOptions);
+            printJexHelp();
         }
     }
 

@@ -25,43 +25,7 @@ public class ArgumentParser {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> optionsList = (List<Map<String, Object>>) config.get("options");
-
-            for (Map<String, Object> optionConfig : optionsList) {
-                Option.Builder builder = Option.builder();
-
-                // Set short option if present
-                if (optionConfig.containsKey("short")) {
-                    builder.option((String) optionConfig.get("short"));
-                }
-
-                // Set long option
-                if (optionConfig.containsKey("long")) {
-                    builder.longOpt((String) optionConfig.get("long"));
-                }
-
-                // Set description
-                if (optionConfig.containsKey("description")) {
-                    builder.desc((String) optionConfig.get("description"));
-                }
-
-                // Set if option requires an argument
-                if (optionConfig.containsKey("hasArg")) {
-                    boolean hasArg = (Boolean) optionConfig.get("hasArg");
-                    builder.hasArg(hasArg);
-                }
-
-                // Set argument name if present
-                if (optionConfig.containsKey("argName")) {
-                    builder.argName((String) optionConfig.get("argName"));
-                }
-
-                // Set if required
-                if (optionConfig.containsKey("required")) {
-                    builder.required((Boolean) optionConfig.get("required"));
-                }
-
-                options.addOption(builder.build());
-            }
+            return buildOptionsFromList(optionsList);
 
         } catch (Exception e) {
             System.err.println("Error loading arguments from YAML: " + e.getMessage());
@@ -106,40 +70,53 @@ public class ArgumentParser {
 
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> optionsList = (List<Map<String, Object>>) config.get("options");
-
-            for (Map<String, Object> optionConfig : optionsList) {
-                Option.Builder builder = Option.builder();
-
-                if (optionConfig.containsKey("short")) {
-                    builder.option((String) optionConfig.get("short"));
-                }
-
-                if (optionConfig.containsKey("long")) {
-                    builder.longOpt((String) optionConfig.get("long"));
-                }
-
-                if (optionConfig.containsKey("description")) {
-                    builder.desc((String) optionConfig.get("description"));
-                }
-
-                if (optionConfig.containsKey("hasArg")) {
-                    boolean hasArg = (Boolean) optionConfig.get("hasArg");
-                    builder.hasArg(hasArg);
-                }
-
-                if (optionConfig.containsKey("argName")) {
-                    builder.argName((String) optionConfig.get("argName"));
-                }
-
-                if (optionConfig.containsKey("required")) {
-                    builder.required((Boolean) optionConfig.get("required"));
-                }
-
-                options.addOption(builder.build());
-            }
-
+            return buildOptionsFromList(optionsList);
         } catch (Exception e) {
             System.err.println("Error loading arguments from resource: " + e.getMessage());
+        }
+
+        return options;
+    }
+
+    /**
+     * Build Options from a list of option configurations.
+     * Extracts common logic for parsing option configurations.
+     *
+     * @param optionsList List of option configuration maps from YAML
+     * @return Options object with all parsed options
+     */
+    private static Options buildOptionsFromList(List<Map<String, Object>> optionsList) {
+        Options options = new Options();
+
+        for (Map<String, Object> optionConfig : optionsList) {
+            Option.Builder builder = Option.builder();
+
+            if (optionConfig.containsKey("short")) {
+                builder.option((String) optionConfig.get("short"));
+            }
+
+            if (optionConfig.containsKey("long")) {
+                builder.longOpt((String) optionConfig.get("long"));
+            }
+
+            if (optionConfig.containsKey("description")) {
+                builder.desc((String) optionConfig.get("description"));
+            }
+
+            if (optionConfig.containsKey("hasArg")) {
+                boolean hasArg = (Boolean) optionConfig.get("hasArg");
+                builder.hasArg(hasArg);
+            }
+
+            if (optionConfig.containsKey("argName")) {
+                builder.argName((String) optionConfig.get("argName"));
+            }
+
+            if (optionConfig.containsKey("required")) {
+                builder.required((Boolean) optionConfig.get("required"));
+            }
+
+            options.addOption(builder.build());
         }
 
         return options;
