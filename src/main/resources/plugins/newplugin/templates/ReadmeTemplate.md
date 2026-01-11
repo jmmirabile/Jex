@@ -2,6 +2,14 @@
 
 A Jex plugin.
 
+## TODO
+
+- [ ] Change package name in `pom.xml` and `${CLASS_NAME}.java` (currently: `${PACKAGE_NAME}`)
+- [ ] Change class name in `${CLASS_NAME}.java` if needed
+- [ ] Add custom arguments to `arguments.yaml`
+- [ ] Implement plugin logic in `${CLASS_NAME}.java`
+- [ ] Update this README with plugin description
+
 ## Description
 
 TODO: Describe what this plugin does.
@@ -22,21 +30,38 @@ mvn clean package
 
 ### Install
 
-```bash
-# Copy JAR to Jex plugins directory
-cp target/${ARTIFACT_ID}.jar ~/.config/Jex/plugins/
+1. **Copy plugin JAR to Jex plugins directory:**
 
-# Register in Jex
-# Edit ~/.config/Jex/plugin.yaml and add:
-```
+   **Linux:**
+   ```bash
+   cp target/${ARTIFACT_ID}.jar ~/.config/Jex/plugins/
+   ```
 
-```yaml
-${PLUGIN_NAME}:
-  jar: ${ARTIFACT_ID}.jar
-  class: ${PACKAGE_NAME}.${CLASS_NAME}Plugin
-  version: 1.0.0
-  description: "TODO: Add description"
-```
+   **macOS:**
+   ```bash
+   cp target/${ARTIFACT_ID}.jar ~/Library/Application\ Support/Jex/plugins/
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   Copy-Item target/${ARTIFACT_ID}.jar $env:APPDATA\Jex\plugins\
+   ```
+
+2. **Register plugin in Jex:**
+
+   Edit the plugin registry file:
+   - **Linux/macOS:** `~/.config/Jex/plugin.yaml` (Linux) or `~/Library/Application Support/Jex/plugin.yaml` (macOS)
+   - **Windows:** `%APPDATA%\Jex\plugin.yaml`
+
+   Add this entry:
+
+   ```yaml
+   ${PLUGIN_NAME}:
+     jar: ${ARTIFACT_ID}.jar
+     class: ${PACKAGE_NAME}.${CLASS_NAME}
+     version: 1.0.0
+     description: "TODO: Add description"
+   ```
 
 ## Usage
 
@@ -57,7 +82,7 @@ ${ARTIFACT_ID}/
 ├── src/
 │   ├── main/
 │   │   ├── java/${PACKAGE_PATH}/
-│   │   │   └── ${CLASS_NAME}Plugin.java
+│   │   │   └── ${CLASS_NAME}.java
 │   │   └── resources/
 │   │       └── arguments.yaml
 │   └── test/
@@ -67,7 +92,7 @@ ${ARTIFACT_ID}/
 
 ### Customization
 
-1. Edit `${CLASS_NAME}Plugin.java` to implement your logic
+1. Edit `${CLASS_NAME}.java` to implement your logic
 2. Update `arguments.yaml` to define CLI arguments
 3. Update this README with usage information
 

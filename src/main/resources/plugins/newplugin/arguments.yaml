@@ -1,4 +1,4 @@
-# New Plugin Generator CLI Arguments
+# New JexPlugin Generator CLI Arguments
 
 options:
   - name: help

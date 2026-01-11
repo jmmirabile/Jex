@@ -1,4 +1,4 @@
-# ${PLUGIN_NAME_CAPITALIZED} Plugin CLI Arguments
+# ${PLUGIN_NAME_CAPITALIZED} JexPlugin CLI Arguments
 
 options:
   - name: help

@@ -72,11 +72,11 @@ to see the Plugin's help and options.
 
 ### Installation
 
-1. **Download** the `Jex-1.0.2.jar` file (fat JAR with all dependencies) from the Releases link.
+1. **Download** the `Jex-1.0.2.2.jar` file (fat JAR with all dependencies) from the Releases link.
 
 2. **Run install** to set up Jex:
    ```bash
-   java -jar Jex-1.0.2.jar --install
+   java -jar Jex-1.0.2.2.jar --install
    ```
    After installation completes, the following has been created:
    * Configuration directories (OS-specific locations)
@@ -162,22 +162,21 @@ Each plugin is a self-contained JAR file containing:
 
 ```
 my-plugin.jar
-├── com/example/MyPlugin.class    # Implements Plugin interface
+├── com/example/MyPlugin.class    # Implements JexPlugin interface
 ├── arguments.yaml                 # CLI argument definitions
 └── [other plugin classes/resources]
 ```
 
 ### Plugin Interface
 
-All plugins must implement the `Plugin` interface:
+All plugins must implement the `JexPlugin` interface:
 
 ```java
 package org.jex.cli;
 
-public interface Plugin {
+public interface JexPlugin {
     String getName();
     void execute(String[] args);
-    String[] getCommandLineOptions();
 }
 ```
 
@@ -243,7 +242,7 @@ Initialize and install Jex:
 
 ```bash
 jex --install
-java -jar Jex-1.0.2.jar --install  # First-time installation
+java -jar Jex-1.0.2.2.jar --install  # First-time installation
 ```
 
 This command:
@@ -266,6 +265,65 @@ jex -l
 ```
 
 Shows all registered plugins from `plugin.yaml`. Note: Internal plugins like `new-plugin` are auto-discovered and don't appear in this list.
+
+### Plugin Management
+
+Jex provides commands to manage plugin installation, updates, and removal.
+
+#### Install Plugin
+
+Install a new plugin:
+
+```bash
+jex --install-plugin <name> --jar <jar-file>
+```
+
+Example:
+```bash
+jex --install-plugin my-tool --jar target/my-tool-plugin.jar
+```
+
+This command:
+- Copies the JAR to the plugins directory
+- Scans the JAR for a JexPlugin implementation
+- Extracts metadata (class name, version, description)
+- Registers the plugin in `plugin.yaml`
+- Validates the plugin loads correctly
+
+#### Update Plugin
+
+Update an existing plugin:
+
+```bash
+jex --update-plugin <name> --jar <jar-file>
+```
+
+Example:
+```bash
+jex --update-plugin my-tool --jar target/my-tool-plugin.jar
+```
+
+This command:
+- Replaces the existing JAR in the plugins directory
+- Updates the plugin entry in `plugin.yaml`
+- Validates the updated plugin loads correctly
+
+#### Uninstall Plugin
+
+Remove a plugin:
+
+```bash
+jex --uninstall-plugin <name>
+```
+
+Example:
+```bash
+jex --uninstall-plugin my-tool
+```
+
+This command:
+- Removes the JAR from the plugins directory
+- Removes the plugin entry from `plugin.yaml`
 
 ## Internal Plugins
 
@@ -290,7 +348,7 @@ jex new-plugin my-tool --package com.mycompany.tools
 ```
 
 This creates a complete Maven project with:
-- Plugin class skeleton implementing the `Plugin` interface
+- Plugin class skeleton implementing the `JexPlugin` interface
 - Sample `arguments.yaml` for CLI arguments
 - Maven `pom.xml` configured for Jex plugins
 - `.gitignore` file
@@ -310,7 +368,7 @@ jex --help
 jex --list
 
 # Install Jex
-java -jar Jex-1.0.2.jar --install
+java -jar Jex-1.0.2.2.jar --install
 
 # Create a new plugin project
 jex new-plugin my-awesome-tool --package com.example
@@ -350,13 +408,13 @@ jex <plugin-name> [args...]
    jex new-plugin my-plugin --package com.example
    ```
 
-2. **Implement the `Plugin` interface** in your main class:
+2. **Implement the `JexPlugin` interface** in your main class:
    ```java
    package com.example;
 
-   import org.jex.cli.Plugin;
+import org.jex.cli.JexPlugin;
 
-   public class MyPlugin implements Plugin {
+   public class MyPlugin implements JexPlugin {
        @Override
        public String getName() {
            return "my-plugin";
@@ -365,12 +423,6 @@ jex <plugin-name> [args...]
        @Override
        public void execute(String[] args) {
            // Your plugin logic here
-       }
-
-       @Override
-       public String[] getCommandLineOptions() {
-           // Return CLI options
-           return new String[0];
        }
    }
    ```
@@ -424,12 +476,12 @@ my-plugin/
 
 3. **The built JAR** will be at:
    ```
-   target/Jex-1.0.2.jar
+   target/Jex-1.0.2.2.jar
    ```
 
 4. **Install it**:
    ```bash
-   java -jar target/Jex-1.0.2.jar --install
+   java -jar target/Jex-1.0.2.2.jar --install
    ```
 
 ### Development Commands
@@ -455,9 +507,9 @@ Jex/
 ├── src/
 │   ├── main/
 │   │   ├── java/org/jex/cli/
-│   │   │   ├── App.java              # Main entry point and command routing
+│   │   │   ├── Jex.java              # Main entry point and command routing
 │   │   │   ├── Install.java          # Install command implementation
-│   │   │   ├── Plugin.java           # Plugin interface (3 methods)
+│   │   │   ├── JexPlugin.java        # JexPlugin interface (2 methods)
 │   │   │   ├── PluginLoader.java     # Dynamic JAR loading via URLClassLoader
 │   │   │   ├── PathConfig.java       # OS-aware path management
 │   │   │   ├── ArgumentParser.java   # YAML to CLI options conversion
@@ -502,7 +554,7 @@ Jex/
 - **Lazy loading** - Plugins only loaded when invoked
 - **Minimal overhead** - Core has no plugin-specific code
 - **Plugin-based extensibility** - Even the generator is a plugin
-- **Zero framework complexity** - Simple Plugin interface (3 methods)
+- **Zero framework complexity** - Simple JexPlugin interface (2 methods)
 - **Scales to hundreds of plugins** without performance degradation
 
 ## Dependencies

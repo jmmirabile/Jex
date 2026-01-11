@@ -198,7 +198,7 @@ public class Install {
     }
 
     private static void createDefaultPluginYaml(String path) throws IOException {
-        String defaultContent = "# Jex Plugin Registry\n" +
+        String defaultContent = "# Jex JexPlugin Registry\n" +
                 "# Bundled plugins (installed with Jex):\n" +
                 "\n" +
                 "# Add your custom plugins below in the following format:\n" +
@@ -207,7 +207,7 @@ public class Install {
                 "#   jar: plugin-file.jar\n" +
                 "#   class: com.example.PluginClassName\n" +
                 "#   version: 1.0.0\n" +
-                "#   description: \"Plugin description\"\n";
+                "#   description: \"JexPlugin description\"\n";
 
         try (FileWriter writer = new FileWriter(path)) {
             writer.write(defaultContent);

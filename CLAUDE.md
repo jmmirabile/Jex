@@ -29,14 +29,16 @@ Jex is a plugin-based CLI framework for Java that enables developers to create m
 
 ```
 Jex/
-├── src/main/java/solutions/cloudbusiness/cli/
-│   ├── App.java                 # Main entry point and command routing
-│   ├── Plugin.java              # Plugin interface (3 methods)
+├── src/main/java/org/jex/cli/
+│   ├── Jex.java                 # Main entry point and command routing
+│   ├── JexPlugin.java           # JexPlugin interface (2 methods)
 │   ├── PluginLoader.java        # Dynamic JAR loading via URLClassLoader
 │   ├── ArgumentParser.java      # YAML to CLI options conversion
 │   ├── PathConfig.java          # OS-aware path management
-│   ├── Setup.java               # Installation and initialization
-│   └── PluginGenerator.java     # Plugin template generation
+│   ├── Install.java             # Installation and initialization
+│   ├── PluginManager.java       # Plugin CRUD operations
+│   ├── PluginMetadata.java      # Plugin metadata data class
+│   └── JexUtil.java             # Shared utility methods
 │
 ├── src/main/resources/
 │   ├── jex.sh                   # Unix/Linux/macOS wrapper script
@@ -70,10 +72,9 @@ Jex/
 ### Plugin Interface
 All plugins must implement:
 ```java
-public interface Plugin {
+public interface JexPlugin {
     String getName();
     void execute(String[] args);
-    String[] getCommandLineOptions();
 }
 ```
 
@@ -96,12 +97,12 @@ public interface Plugin {
 5. Update TODO.md with any remaining work
 
 ### Creating a New Plugin
-1. Run: `java -jar target/jex.jar --generate-plugin <plugin-name>`
+1. Run: `jex new-plugin <plugin-name> --package <package-name>`
 2. Navigate to generated directory: `cd <plugin-name>-plugin`
-3. Implement Plugin interface in generated class
+3. Implement JexPlugin interface in generated class
 4. Define CLI options in `src/main/resources/arguments.yaml`
 5. Build: `mvn clean package`
-6. Install: Copy JAR to plugins directory and update plugin.yaml
+6. Install: Use `jex --install-plugin <name> --jar <jar-file>` or manually copy JAR and update plugin.yaml
 
 ### Debugging
 - **Check installation**: `java -jar target/jex.jar --list`
@@ -275,7 +276,25 @@ jex test <path>                        # hypothetical test runner plugin
 - [x] Updated README.md for v1.0.2
 - [x] Released v1.0.2 to GitHub
 
-## TODO: v1.0.3 - Plugin Management CRUD Operations
+## Completed (v1.0.2.2 - Released 2026-01-10)
+
+- [x] Renamed `Plugin` → `JexPlugin` (clearer API naming)
+- [x] Renamed `App.java` → `Jex.java` (iconic entry point)
+- [x] Removed `getCommandLineOptions()` method from JexPlugin interface (was unused)
+- [x] Implemented Plugin Management CRUD Operations:
+  - `--install-plugin <name> --jar <file>` - Install a plugin
+  - `--update-plugin <name> --jar <file>` - Update an existing plugin
+  - `--uninstall-plugin <name>` - Uninstall a plugin
+- [x] Created PluginManager.java for plugin lifecycle management
+- [x] Created PluginMetadata.java for plugin metadata
+- [x] Created JexUtil.java for shared JAR scanning utilities (DRY)
+- [x] Switched plugin generator to template-based generation (no more heredocs)
+- [x] Updated all templates to use JexPlugin and remove Plugin suffix
+- [x] Added TODO checklist to generated README
+- [x] Added cross-platform installation instructions to generated README
+- [x] Updated README.md and CLAUDE.md for v1.0.2.2
+
+## Archive: v1.0.3 - Plugin Management CRUD Operations (COMPLETED IN v1.0.2.2)
 
 ### Feature: Developer Plugin Management Commands
 
@@ -468,7 +487,7 @@ jexgradle my-tool
      class: org.jex.plugins.newplugin.NewPlugin
      version: 1.0.0
      bundled: true  # Mark as system plugin
-     description: "Plugin generator"
+     description: "JexPlugin generator"
    ```
    - Could show warnings or prevent deletion of bundled plugins via commands
    - Pros: Metadata-driven, enables programmatic protection
@@ -495,7 +514,7 @@ Combination of Option 3 + 5:
 
 ## Notes
 
-- Current version: 1.0.2 (as of 2026-01-05)
+- Current version: 1.0.2.2 (as of 2026-01-10)
 - Project renamed from "Commander" to "Jex" on 2026-01-03
 - Main branch: `main`
 - Deployment: Fat JAR distribution (`jex.jar`)

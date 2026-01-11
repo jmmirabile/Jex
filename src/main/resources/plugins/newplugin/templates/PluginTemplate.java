@@ -1,10 +1,10 @@
 package ${PACKAGE_NAME};
 
-import org.jex.cli.Plugin;
+import org.jex.cli.JexPlugin;
 import org.jex.cli.ArgumentParser;
 import org.apache.commons.cli.*;
 
-public class ${CLASS_NAME}Plugin implements Plugin {
+public class ${CLASS_NAME} implements JexPlugin {
 
     @Override
     public String getName() {
@@ -14,7 +14,7 @@ public class ${CLASS_NAME}Plugin implements Plugin {
     @Override
     public void execute(String[] args) {
         // Load options from bundled arguments.yaml
-        Options options = ArgumentParser.loadOptionsFromResource("/arguments.yaml");
+        Options options = ArgumentParser.loadOptionsFromResource("/arguments.yaml", this.getClass());
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -35,11 +35,5 @@ public class ${CLASS_NAME}Plugin implements Plugin {
             formatter.printHelp("jex ${PLUGIN_NAME}", options);
             System.exit(1);
         }
-    }
-
-    @Override
-    public String[] getCommandLineOptions() {
-        // TODO: Return your command line options
-        return new String[]{"--help", "-h"};
     }
 }

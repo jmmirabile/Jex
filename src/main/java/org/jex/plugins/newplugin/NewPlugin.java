@@ -1,6 +1,6 @@
 package org.jex.plugins.newplugin;
 
-import org.jex.cli.Plugin;
+import org.jex.cli.JexPlugin;
 import org.jex.cli.PathConfig;
 import org.jex.cli.JexMavenUtil;
 import org.jex.cli.ArgumentParser;
@@ -11,12 +11,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class NewPlugin implements Plugin {
+public class NewPlugin implements JexPlugin {
 
     @Override
     public String getName() {
@@ -42,7 +41,7 @@ public class NewPlugin implements Plugin {
             // Get plugin name from remaining arguments
             String[] remainingArgs = cmd.getArgs();
             if (remainingArgs.length == 0) {
-                System.err.println("Error: Plugin name is required");
+                System.err.println("Error: JexPlugin name is required");
                 printHelp(formatter, options);
                 System.exit(1);
             }
@@ -71,13 +70,9 @@ public class NewPlugin implements Plugin {
         }
     }
 
-    @Override
-    public String[] getCommandLineOptions() {
-        return new String[]{"--help", "-h", "--package", "-p"};
-    }
 
     private void printHelp(HelpFormatter formatter, Options options) {
-        System.out.println("\nJex Plugin Generator");
+        System.out.println("\nJex JexPlugin Generator");
         System.out.println("Creates a new Jex plugin project with Maven structure\n");
         formatter.printHelp("jex new-plugin <plugin-name> [options]", "\nOptions:", options, "");
         System.out.println("\nExample:");
@@ -87,7 +82,7 @@ public class NewPlugin implements Plugin {
 
     private void generate(String pluginName, String javaPackage) {
         if (pluginName == null || pluginName.trim().isEmpty()) {
-            System.err.println("Error: Plugin name cannot be empty");
+            System.err.println("Error: JexPlugin name cannot be empty");
             return;
         }
 
@@ -105,11 +100,11 @@ public class NewPlugin implements Plugin {
 
         // Display header
         System.out.println();
-        System.out.println("Jex Plugin Generator");
+        System.out.println("Jex JexPlugin Generator");
         System.out.println("==========================");
         System.out.println();
         System.out.println("This will create a Java Maven project with:");
-        System.out.println("  • Plugin class implementing the Plugin interface");
+        System.out.println("  • JexPlugin class implementing the JexPlugin interface");
         System.out.println("  • arguments.yaml for CLI argument definitions");
         System.out.println("  • pom.xml configured for Jex plugins");
         System.out.println("  • README.md with usage instructions");
@@ -119,7 +114,7 @@ public class NewPlugin implements Plugin {
         // Prompt for directory
         String targetDir = promptForDirectory();
         if (targetDir == null) {
-            System.out.println("Plugin generation cancelled.");
+            System.out.println("JexPlugin generation cancelled.");
             return;
         }
 
@@ -153,10 +148,10 @@ public class NewPlugin implements Plugin {
             System.out.println("1. cd " + projectPath);
             System.out.println("2. Open in your IDE (IntelliJ, Eclipse, VS Code)");
             if (javaPackage == null) {
-                System.out.println("3. (Optional) Customize package name in pom.xml and " + className + "Plugin.java");
+                System.out.println("3. (Optional) Customize package name in pom.xml and " + className + ".java");
                 System.out.println("   Current package: " + packageName);
             }
-            System.out.println((javaPackage == null ? "4" : "3") + ". Implement your plugin logic in " + className + "Plugin.java");
+            System.out.println((javaPackage == null ? "4" : "3") + ". Implement your plugin logic in " + className + ".java");
             System.out.println((javaPackage == null ? "5" : "4") + ". Build: mvn clean package");
             System.out.println((javaPackage == null ? "6" : "5") + ". Install plugin (see README.md)");
             System.out.println();
@@ -224,235 +219,55 @@ public class NewPlugin implements Plugin {
     }
 
     private void generatePomXml(Path projectPath, String pluginName) throws IOException {
+        String template = loadTemplate("/plugins/newplugin/templates/PomTemplate.xml");
         String artifactId = pluginName + "-plugin";
         String jexVersion = JexMavenUtil.getVersion();
-        String content = String.format("""
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>%s</artifactId>
-    <version>1.0.0</version>
-    <packaging>jar</packaging>
-
-    <name>%s Plugin</name>
-    <description>A Jex plugin</description>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <dependencies>
-        <!-- Jex Plugin Interface -->
-        <dependency>
-            <groupId>org.jex.cli</groupId>
-            <artifactId>Jex</artifactId>
-            <version>%s</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Apache Commons CLI -->
-        <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-            <version>1.11.0</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-            </plugin>
-        </plugins>
-    </build>
-</project>
-""", artifactId, capitalize(pluginName), jexVersion);
+        String content = template
+                .replace("${ARTIFACT_ID}", artifactId)
+                .replace("${PLUGIN_NAME_CAPITALIZED}", capitalize(pluginName))
+                .replace("${JEX_VERSION}", jexVersion);
 
         writeFile(projectPath.resolve("pom.xml"), content);
         System.out.println("✓ Generated pom.xml");
     }
 
     private void generatePluginClass(Path projectPath, String packageName, String className, String pluginName) throws IOException {
+        String template = loadTemplate("/plugins/newplugin/templates/PluginTemplate.java");
         String packagePath = packageName.replace(".", "/");
-        String content = String.format("""
-package %s;
 
-import org.jex.cli.Plugin;
-import org.jex.cli.ArgumentParser;
-import org.apache.commons.cli.*;
+        String content = template
+                .replace("${PACKAGE_NAME}", packageName)
+                .replace("${CLASS_NAME}", className)
+                .replace("${PLUGIN_NAME}", pluginName)
+                .replace("${CLASS_NAME_CAPITALIZED}", capitalize(pluginName));
 
-public class %sPlugin implements Plugin {
-
-    @Override
-    public String getName() {
-        return "%s";
-    }
-
-    @Override
-    public void execute(String[] args) {
-        // Load options from bundled arguments.yaml
-        Options options = ArgumentParser.loadOptionsFromResource("/arguments.yaml", this.getClass());
-
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
-
-        try {
-            CommandLine cmd = parser.parse(options, args);
-
-            if (cmd.hasOption("h")) {
-                formatter.printHelp("jex %s", options);
-                return;
-            }
-
-            // TODO: Implement your plugin logic here
-            System.out.println("%s plugin executed successfully!");
-
-        } catch (ParseException e) {
-            System.err.println("Error parsing arguments: " + e.getMessage());
-            formatter.printHelp("jex %s", options);
-            System.exit(1);
-        }
-    }
-
-    @Override
-    public String[] getCommandLineOptions() {
-        // TODO: Return your command line options
-        return new String[]{"--help", "-h"};
-    }
-}
-""", packageName, className, pluginName, pluginName, capitalize(pluginName), pluginName);
-
-        Path javaFile = projectPath.resolve("src/main/java/" + packagePath + "/" + className + "Plugin.java");
+        Path javaFile = projectPath.resolve("src/main/java/" + packagePath + "/" + className + ".java");
         writeFile(javaFile, content);
-        System.out.println("✓ Generated " + className + "Plugin.java");
+        System.out.println("✓ Generated " + className + ".java");
     }
 
     private void generateArgumentsYaml(Path projectPath, String pluginName) throws IOException {
-        String content = String.format("""
-# %s Plugin CLI Arguments
+        String template = loadTemplate("/plugins/newplugin/templates/ArgumentsTemplate.yaml");
 
-options:
-  - name: help
-    short: h
-    long: help
-    description: "Display help information"
-    required: false
-    hasArg: false
-
-  # TODO: Add your custom arguments here
-  # Example:
-  # - name: input
-  #   short: i
-  #   long: input-file
-  #   description: "Input file path"
-  #   required: true
-  #   hasArg: true
-  #   argName: "file"
-""", capitalize(pluginName));
+        String content = template
+                .replace("${PLUGIN_NAME_CAPITALIZED}", capitalize(pluginName));
 
         writeFile(projectPath.resolve("src/main/resources/arguments.yaml"), content);
         System.out.println("✓ Generated arguments.yaml");
     }
 
     private void generateReadme(Path projectPath, String pluginName, String className, String packageName) throws IOException {
-        String content = String.format("""
-# %s Plugin
+        String template = loadTemplate("/plugins/newplugin/templates/ReadmeTemplate.md");
+        String artifactId = pluginName + "-plugin";
 
-A Jex plugin.
-
-## Description
-
-TODO: Describe what this plugin does.
-
-## Installation
-
-### Prerequisites
-
-- Java 21 or later
-- Maven 3.6+
-- Jex installed
-
-### Build
-
-```bash
-mvn clean package
-```
-
-### Install
-
-```bash
-# Copy JAR to Jex plugins directory
-cp target/%s-plugin.jar ~/.config/Jex/plugins/
-
-# Register in Jex
-# Edit ~/.config/Jex/plugin.yaml and add:
-```
-
-```yaml
-%s:
-  jar: %s-plugin.jar
-  class: %s.%sPlugin
-  version: 1.0.0
-  description: "TODO: Add description"
-```
-
-## Usage
-
-```bash
-# Show help
-jex %s --help
-
-# Run the plugin
-jex %s [options]
-```
-
-## Development
-
-### Project Structure
-
-```
-%s-plugin/
-├── src/
-│   ├── main/
-│   │   ├── java/%s/
-│   │   │   └── %sPlugin.java
-│   │   └── resources/
-│   │       └── arguments.yaml
-│   └── test/
-├── pom.xml
-└── README.md
-```
-
-### Customization
-
-1. Edit `%sPlugin.java` to implement your logic
-2. Update `arguments.yaml` to define CLI arguments
-3. Update this README with usage information
-
-## License
-
-TODO: Add license information
-""", capitalize(pluginName), pluginName, pluginName, pluginName, packageName, className,
-                pluginName, pluginName, pluginName, packageName.replace(".", "/"), className, className);
+        String content = template
+                .replace("${PLUGIN_NAME_CAPITALIZED}", capitalize(pluginName))
+                .replace("${ARTIFACT_ID}", artifactId)
+                .replace("${PLUGIN_NAME}", pluginName)
+                .replace("${PACKAGE_NAME}", packageName)
+                .replace("${CLASS_NAME}", className)
+                .replace("${PACKAGE_PATH}", packageName.replace(".", "/"));
 
         writeFile(projectPath.resolve("README.md"), content);
         System.out.println("✓ Generated README.md");
@@ -579,11 +394,11 @@ dependency-reduced-pom.xml
                 System.out.println("✓ Jex installed to Maven local repository");
             } else {
                 System.err.println("⚠ Warning: Failed to install Jex to Maven repository");
-                System.err.println("  Plugin development may require manual Maven setup");
+                System.err.println("  JexPlugin development may require manual Maven setup");
             }
         } catch (Exception e) {
             System.err.println("⚠ Warning: Could not install to Maven repo: " + e.getMessage());
-            System.err.println("  Plugin development may require manual Maven setup");
+            System.err.println("  JexPlugin development may require manual Maven setup");
         }
     }
 
@@ -595,6 +410,18 @@ dependency-reduced-pom.xml
                 File.separator + "cli" + File.separator + "Jex" +
                 File.separator + jexVersion + File.separator + "Jex-" + jexVersion + ".jar";
         return new File(mavenRepo).exists();
+    }
+
+    private String loadTemplate(String templatePath) throws IOException {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(getClass().getResourceAsStream(templatePath)))) {
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            return content.toString();
+        }
     }
 }
 

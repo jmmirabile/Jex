@@ -20,7 +20,7 @@
     </properties>
 
     <dependencies>
-        <!-- Jex Plugin Interface -->
+        <!-- Jex JexPlugin Interface -->
         <dependency>
             <groupId>org.jex.cli</groupId>
             <artifactId>Jex</artifactId>

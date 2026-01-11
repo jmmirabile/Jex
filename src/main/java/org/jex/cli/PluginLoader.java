@@ -34,13 +34,13 @@ public class PluginLoader {
     /**
      * Load and instantiate a plugin from a JAR file
      */
-    public Plugin loadPlugin(String pluginName, Map<String, Object> pluginConfig) {
+    public JexPlugin loadPlugin(String pluginName, Map<String, Object> pluginConfig) {
         try {
             String jarFileName = (String) pluginConfig.get("jar");
             String className = (String) pluginConfig.get("class");
 
             if (jarFileName == null || className == null) {
-                System.err.println("Error: Plugin configuration missing 'jar' or 'class' field");
+                System.err.println("Error: JexPlugin configuration missing 'jar' or 'class' field");
                 return null;
             }
 
@@ -48,7 +48,7 @@ public class PluginLoader {
             Path jarPath = Paths.get(PathConfig.getPluginsDirectory(), jarFileName);
 
             if (!Files.exists(jarPath)) {
-                System.err.println("Error: Plugin JAR not found: " + jarPath);
+                System.err.println("Error: JexPlugin JAR not found: " + jarPath);
                 return null;
             }
 
@@ -65,13 +65,13 @@ public class PluginLoader {
             // Instantiate the plugin
             Object pluginInstance = pluginClass.getDeclaredConstructor().newInstance();
 
-            // Verify it implements the Plugin interface
-            if (!(pluginInstance instanceof Plugin)) {
-                System.err.println("Error: Class " + className + " does not implement Plugin interface");
+            // Verify it implements the JexPlugin interface
+            if (!(pluginInstance instanceof JexPlugin)) {
+                System.err.println("Error: Class " + className + " does not implement JexPlugin interface");
                 return null;
             }
 
-            return (Plugin) pluginInstance;
+            return (JexPlugin) pluginInstance;
 
         } catch (Exception e) {
             System.err.println("Error loading plugin '" + pluginName + "': " + e.getMessage());
